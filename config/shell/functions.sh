@@ -27,3 +27,21 @@ ports() {
 wbpath() {
   printf '%s\n' "$PATH" | tr ':' '\n'
 }
+
+# cd up N directories (default 1): `up 3` is cd ../../..
+up() {
+  _n=${1:-1}
+  case $_n in ''|*[!0-9]*) echo "usage: up [levels]" >&2; unset _n; return 1 ;; esac
+  _p=.
+  while [ "$_n" -gt 0 ]; do _p=$_p/..; _n=$((_n - 1)); done
+  cd -- "$_p" || { unset _n _p; return 1; }
+  unset _n _p
+}
+
+# git clone, then cd into the new checkout.
+clonecd() {
+  [ -n "$1" ] || { echo "usage: clonecd <url> [dir]" >&2; return 1; }
+  _d=${2:-$(basename -- "$1" .git)}
+  git clone -- "$1" "$_d" && cd -- "$_d" || { unset _d; return 1; }
+  unset _d
+}
