@@ -12,7 +12,7 @@ Check this before any change, especially on shared or exam clusters.
 hostname
 kubectl config current-context                                   # kctx
 kubectl config get-contexts                                      # kctxs
-kubectl config use-context <context>
+kubectl config use-context <context>                             # kcuc
 kubectl config view --minify -o 'jsonpath={..namespace}'
 kns <namespace>        # set the namespace on the current context
 ```
@@ -22,12 +22,12 @@ kns <namespace>        # set the namespace on the current context
 ```bash
 kubectl get all -n <ns>
 kubectl get pods -n <ns> -o wide                                 # kgp
-kubectl get events -n <ns> --sort-by=.lastTimestamp
+kubectl get events -n <ns> --sort-by=.lastTimestamp              # kge
 kubectl describe pod <pod> -n <ns>                               # kdesc pod <pod>
 kubectl logs <pod> -n <ns> [-c <container>] [--previous]         # klogs
 kubectl get svc,endpointslices -n <ns>                           # kgs
-kubectl rollout status deploy/<name> -n <ns>
-kubectl rollout history deploy/<name> -n <ns>
+kubectl rollout status deploy/<name> -n <ns>                     # krs
+kubectl rollout history deploy/<name> -n <ns>                    # krh
 kubectl get nodes -o wide                                        # kgn
 kubectl describe node <node>      # conditions: MemoryPressure, DiskPressure, PIDPressure
 ```
@@ -154,10 +154,10 @@ terraform destroy       # tfd  - destructive; prompts for approval
 ### State
 
 ```bash
-terraform state list
+terraform state list            # tfsl
 terraform state show <address>
-terraform show
-terraform console
+terraform show                  # tfsh
+terraform console               # tfc
 terraform state rm <address>    # forgets the resource without destroying it - debugging only
 ```
 
