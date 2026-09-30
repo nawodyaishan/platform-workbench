@@ -2,6 +2,8 @@
 
 Tailscale provides private reachability, OpenSSH handles authentication, and tmux keeps the session alive. You always connect by name (`ssh rhel-lab`, `ssh ubuntu-lab`, `ssh proxmox`) and never by address.
 
+New to SSH, or want the reasoning behind these defaults? Work through the [SSH tutorial](ssh-tutorial/README.md), which teaches SSH from a first login to hardened automation using this repository's files as the examples.
+
 ## Layout on the Mac
 
 ```text

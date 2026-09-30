@@ -160,7 +160,7 @@ bootstrap/
 config/               canonical shell, tmux, vim, git, ssh and ghostty configs
 kodekloud/            paste-in shell snippet for disposable lab nodes
 scripts/              remote transport, secret scan, repo checks, tests, git hook
-docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets
+docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, ssh-tutorial/
 .claude/skills/       agentic spec-driven development skills for AI coding agents
 ```
 
@@ -171,6 +171,7 @@ docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets
 | [Hosts and profiles](docs/hosts.md) | What each machine gets, extras, adding a host |
 | [Bootstrapping a machine](docs/new-machine.md) | A new Mac, a fresh Linux host from the Mac, first contact |
 | [SSH and Tailscale](docs/ssh.md) | Named hosts, config layering, multiplexing, agent-forwarding policy |
+| [Learn SSH (tutorial)](docs/ssh-tutorial/README.md) | Beginner to advanced SSH course built on this repo's real SSH files |
 | [Managed configuration](docs/config.md) | The canonical configs, how they are installed, tmux/Vim/Ghostty notes |
 | [KodeKloud and disposable nodes](docs/kodekloud.md) | The session-only CKA shell snippet |
 | [Cheatsheets](docs/cheatsheets.md) | Kubernetes, Linux and Terraform lab commands |
