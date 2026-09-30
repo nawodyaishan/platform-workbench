@@ -12,6 +12,15 @@ A public, profile-driven Bash toolkit that bootstraps, updates and verifies a ma
 - A new host needs matching entries in `bootstrap/hosts.conf` and the `Host` line of `config/ssh/workbench.conf`.
 - Keep Proxmox minimal: no dev stacks, no Kubernetes, no `pve-*` upgrades.
 
+## Spec-driven development
+
+The agentic SDD skills live in `.claude/skills/agentic-sdd-*`. Start with `agentic-sdd-router`. The shared policy is in `.claude/skills/agentic-sdd-router/references/workflow-policy.md`.
+
+- Canonical sources: [README.md](README.md) and [docs/](docs/). There is no separate SRS or roadmap.
+- Features: `specs/<nnn-slug>/` holds `spec.md`, `plan.md` and `tasks.md`. The single combined human approval of all three is recorded in the `## Approval` section of `spec.md`.
+- Batch state and continuation notes: `tasks.md` of the feature.
+- Development versus execution: editing `bootstrap/`, `config/` or `scripts/`, running the checks below, and `--dry-run` or `verify` against the local machine are development. Running `task bootstrap|update` without `--dry-run`, anything with `HOST=`, `task ssh:copy-id` and `task gh-key` act on real machines and need explicit human authorization every time.
+
 ## Validate
 
 ```bash
