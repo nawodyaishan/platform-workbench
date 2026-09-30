@@ -9,6 +9,7 @@ Each tool has exactly one canonical file, shared by every machine.
 | [shell/bashrc](../config/shell/bashrc), [shell/zshrc](../config/shell/zshrc) | one marker block in `~/.bashrc` (Linux) or `~/.zshrc` (Mac) | History, editors, PATH, nvm, kubectl completion for `k`. |
 | [tmux/tmux.conf](../config/tmux/tmux.conf) | `~/.tmux.conf` symlink | Stock keys, plugin-free, tmux 3.2+. |
 | [vim/vimrc](../config/vim/vimrc) | `~/.vimrc` symlink | Small and YAML-safe. Sources `~/.vimrc.local` for personal plugins or themes. |
+| [nvim/](../config/nvim/) | `~/.config/nvim` symlink | Mac only; minimal daily-driver for Go/TypeScript/YAML. See below. |
 | [git/gitconfig](../config/git/gitconfig) | `include.path` in `~/.gitconfig` | Defaults only, no identity. |
 | [ssh/workbench.conf](../config/ssh/workbench.conf) | `~/.ssh/config.d/50-workbench.conf` symlink | Mac only; see [ssh.md](ssh.md). |
 | [ghostty/config.ghostty](../config/ghostty/config.ghostty) | not linked | Mac only. Point Ghostty at it with `config-file = …` or copy it. |
@@ -60,6 +61,10 @@ Keys stay stock on purpose: prefix `Ctrl-b`, `%`/`"` splits, default copy mode. 
 ## Vim
 
 Vim stops loading `defaults.vim` when `~/.vimrc` exists, so the vimrc sources it explicitly (guarded for vim-tiny). On top of that it sets two-space expanded indentation, line numbers, smart search, no mouse (so terminal copy/paste keeps working), no swap files, and the Vim 9.1 `comment` package when available.
+
+## Neovim
+
+Separate from Vim on purpose: Vim ([above](#vim)) stays stock so muscle memory matches a CKA/RHCSA/CKS exam terminal, and Neovim carries the daily-driver setup instead. Native only — no plugin manager to bootstrap (Neovim 0.12+'s built-in `vim.pack`), no `nvim-lspconfig` (native `vim.lsp.config`/`vim.lsp.enable`), no Mason. Language servers come from the same install paths this toolkit already uses elsewhere: `gopls` via `go install`, `typescript-language-server`/`yaml-language-server` via `npm install -g`, `lua-language-server` from the Brewfile; each LSP only enables itself if its binary is on `PATH`, so a machine missing Node or Go just gets fewer servers, not an error. Four plugins: `nvim-treesitter`, `blink.cmp` (pinned to its `v1` line — `main` is an in-development v2 needing a separate `blink.lib` package), `fzf-lua`, `gitsigns.nvim`. `lua/user/init.lua` (untracked, `.gitignore`d) is the escape hatch for personal additions, mirroring `~/.vimrc.local`.
 
 ## Ghostty
 

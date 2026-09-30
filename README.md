@@ -96,7 +96,7 @@ platform-workbench verify  profile=ubuntu  host=ubuntu-lab (Ubuntu 24.04 LTS)
 
 | Machine | Alias | Profile | What it gets |
 |---|---|---|---|
-| macOS workstation | local | `macos` | Brewfile, shell, Git, SSH client config, Tailscale, OrbStack check, Kubernetes CLIs, Go |
+| macOS workstation | local | `macos` | Brewfile, shell, Git, SSH client config, Tailscale, OrbStack check, Kubernetes CLIs, Go, minimal Neovim (Go/TS/YAML) |
 | RHEL 9 family VM (RHEL, Alma, Rocky) | `rhel-lab` | `rhel` | Shell, Git, sshd, Tailscale, podman, kubectl/kubeadm, CKA tools, SELinux and admin utilities |
 | Ubuntu LTS VM | `ubuntu-lab` | `ubuntu` | Shell, Git, sshd, Tailscale, Docker CE, kubectl/kubeadm, Helm, k9s, CKA tools |
 | Proxmox VE host | `proxmox` | `proxmox` | Deliberately minimal: shell config, sshd, Tailscale, host utilities. Nothing else |
@@ -156,9 +156,9 @@ bootstrap/
   workbench.sh        lifecycle engine: <bootstrap|update|verify> --profile <name>
   hosts.conf          registered hosts: <ssh-alias> <profile>
   lib/                OS detection, package managers, marker blocks, host registry
-  modules/            base shell git ssh tailscale containers k8s lang cka
+  modules/            base shell git ssh tailscale containers k8s lang nvim cka
   profiles/           macos (+ Brewfile), rhel, ubuntu, proxmox
-config/               canonical shell, tmux, vim, git, ssh and ghostty configs
+config/               canonical shell, tmux, vim, nvim, git, ssh and ghostty configs
 kodekloud/            paste-in shell snippet for disposable lab nodes
 scripts/              remote transport, secret scan, repo checks, tests, git hook
 docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, ssh-tutorial/
