@@ -27,6 +27,8 @@ id_ecdsa*
 *.local.conf
 
 # Local tooling
+config/nvim/lua/user/
+config/nvim/nvim-pack-lock.json
 .claude/settings.local.json
 CLAUDE.local.md
 .codegraph/
