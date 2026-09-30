@@ -1,0 +1,55 @@
+" Minimal vimrc for lab work — YAML-safe indentation and sane terminal defaults.
+" Kept deliberately small: the CKA exam environment will not have this file,
+" so muscle memory should not depend on it. See config/README.md.
+
+" Vim stops loading defaults.vim the moment any ~/.vimrc exists, so source it
+" explicitly. It provides syntax on, filetype plugin indent on, incsearch,
+" scrolloff=5, and backspace=indent,eol,start.
+"
+" The guard and the unlet both matter on lab nodes:
+"   - filereadable: vim-tiny has no defaults.vim, and a bare source throws E484
+"     on every launch.
+"   - unlet: defaults.vim does `if exists('skip_defaults_vim') | finish`, and
+"     some distro /etc/vim/vimrc files set that — the source would silently
+"     do nothing.
+if filereadable(expand('$VIMRUNTIME/defaults.vim'))
+  unlet! skip_defaults_vim
+  source $VIMRUNTIME/defaults.vim
+endif
+
+" Vim 9.1 ships a native comment plugin: gc{motion}, gcc, gC, plus ic/ac text
+" objects. Not enabled by default, and silent! so older Vim just skips it.
+silent! packadd comment
+
+" YAML: two spaces, never a tab, and keep the previous line's indent.
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+set autoindent
+
+set number
+set cursorcolumn
+set ignorecase
+set smartcase
+set hlsearch
+
+" defaults.vim turns the mouse on, which hijacks terminal drag-select and
+" breaks copy/paste in Ghostty and browser lab terminals.
+set mouse=
+
+" Avoid Vim's swapfile clutter in lab repos and scratch dirs.
+set noswapfile
+set nobackup
+
+" YAML/Kubernetes manifests: keep indentation strictly spaces, show the column.
+augroup workbench_yaml
+  autocmd!
+  autocmd FileType yaml setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2 indentkeys-=0#
+augroup END
+
+" Personal, unmanaged overrides (plugins, themes). Not part of this repo, so
+" lab nodes and the exam keep the minimal behaviour above.
+if filereadable(expand('~/.vimrc.local'))
+  source ~/.vimrc.local
+endif

@@ -1,0 +1,96 @@
+# ============================================================
+# Ghostty Config — Power User Setup
+# Validate: ghostty +validate-config
+# Inspect:  ghostty +show-config | ghostty +list-keybinds
+# ============================================================
+
+# --- Appearance ---
+font-family = "JetBrainsMono Nerd Font"
+font-size = 13
+font-thicken = true
+theme = Catppuccin Mocha
+background-opacity = 0.95
+background-blur = true
+window-padding-x = 4,2
+window-padding-y = 6,0
+window-padding-color = extend
+window-decoration = true
+macos-titlebar-style = transparent
+
+# --- Cursor ---
+cursor-style = bar
+cursor-style-blink = true
+adjust-cursor-thickness = 1
+cursor-click-to-move = true
+
+# --- Behavior ---
+scrollback-limit = 10000000
+window-inherit-working-directory = true
+window-save-state = always
+confirm-close-surface = true
+clipboard-paste-protection = true
+clipboard-read = allow
+clipboard-write = allow
+mouse-hide-while-typing = true
+
+# --- Splits ---
+unfocused-split-opacity = 0.8
+split-preserve-zoom = navigation
+
+# --- macOS Specific ---
+macos-option-as-alt = left
+macos-non-native-fullscreen = visible-menu
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+# Primary axis = height, because position is top. Single value leaves width full.
+# NOTE: window-save-state = always caches the quick terminal's frame, and the
+# cached size wins over this on macOS. If you change this value and nothing
+# happens, that cache is why — see docs/config.md.
+quick-terminal-size = 40%
+quick-terminal-animation-duration = 0.08
+quick-terminal-autohide = false
+
+# --- Shell & SSH ---
+shell-integration = zsh
+# ssh-terminfo installs the xterm-ghostty terminfo entry on remote hosts on first
+# connect; without it, vim and tmux render broken over SSH to the lab VMs.
+shell-integration-features = sudo,title,ssh-env,ssh-terminfo
+term = xterm-ghostty
+
+# ============================================================
+# Keybindings
+#
+# Default split binds (no override needed):
+#   cmd+d              → split right
+#   cmd+shift+d        → split down
+#   cmd+opt+↑/↓/←/→   → navigate splits
+#   cmd+[ / cmd+]      → prev/next split
+#   cmd+shift+enter    → zoom/unzoom split
+#   cmd+ctrl+↑/↓/←/→  → resize split
+#   cmd+ctrl+=         → equalize splits
+#   cmd+up / cmd+down  → jump to prev/next prompt (needs shell integration)
+#   cmd+shift+[ / ]    → prev/next tab
+#   cmd+f              → search scrollback
+#   cmd+, / cmd+shift+, → open/reload config
+# ============================================================
+copy-on-select = false
+
+# Dump scrollback to editor
+keybind = cmd+shift+j=write_scrollback_file:paste
+
+# Clear screen (without losing scrollback)
+keybind = cmd+k=clear_screen
+
+# Reload config without restarting
+keybind = cmd+shift+r=reload_config
+
+# cmd+1-9 unbound — prevents conflicts with macOS Spaces / app shortcuts
+keybind = cmd+1=unbind
+keybind = cmd+2=unbind
+keybind = cmd+3=unbind
+keybind = cmd+4=unbind
+keybind = cmd+5=unbind
+keybind = cmd+6=unbind
+keybind = cmd+7=unbind
+keybind = cmd+8=unbind
+keybind = cmd+9=unbind

@@ -1,0 +1,8 @@
+# Copy to ~/.ssh/config.d/10-hosts.local.conf; keep the copy outside Git.
+Host proxmox
+    User root
+
+# For first contact before Tailscale is available:
+# Host rhel-lab
+#     User myuser
+#     HostName 192.0.2.10

@@ -1,0 +1,43 @@
+# platform-workbench bash wiring. Sourced from the marker block in ~/.bashrc:
+#   # >>> platform-workbench >>>
+#   export WORKBENCH_HOME=...
+#   [ -r "$WORKBENCH_HOME/config/shell/bashrc" ] && . "$WORKBENCH_HOME/config/shell/bashrc"
+#   # <<< platform-workbench <<<
+# Interactive shells only.
+case $- in *i*) ;; *) return 0 2>/dev/null || exit 0 ;; esac
+
+: "${WORKBENCH_HOME:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+export WORKBENCH_HOME
+
+# History
+HISTSIZE=100000
+HISTFILESIZE=200000
+HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend checkwinsize
+
+# Editors
+export EDITOR=vim
+export VISUAL=vim
+export KUBE_EDITOR=vim
+
+# PATH (only add what exists, only once)
+for _d in "$HOME/.local/bin" /usr/local/go/bin "$HOME/go/bin"; do
+  [ -d "$_d" ] && case ":$PATH:" in *":$_d:"*) ;; *) PATH="$_d:$PATH" ;; esac
+done
+unset _d
+export PATH
+
+# nvm, if installed
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# Aliases and functions
+[ -r "$WORKBENCH_HOME/config/shell/aliases.sh" ] && . "$WORKBENCH_HOME/config/shell/aliases.sh"
+[ -r "$WORKBENCH_HOME/config/shell/functions.sh" ] && . "$WORKBENCH_HOME/config/shell/functions.sh"
+
+# kubectl completion, including the `k` alias
+if command -v kubectl >/dev/null 2>&1; then
+  # shellcheck disable=SC1090
+  source <(kubectl completion bash 2>/dev/null) 2>/dev/null
+  complete -o default -F __start_kubectl k 2>/dev/null
+fi

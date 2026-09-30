@@ -1,0 +1,32 @@
+# platform-workbench zsh wiring. Sourced from the marker block in ~/.zshrc (appended last,
+# so it loads after oh-my-zsh and its definitions win). Interactive shells only.
+[[ -o interactive ]] || return 0
+
+: "${WORKBENCH_HOME:=${${(%):-%x}:A:h:h:h}}"
+export WORKBENCH_HOME
+
+# Editors
+export EDITOR=vim
+export VISUAL=vim
+export KUBE_EDITOR=vim
+
+# PATH (only add what exists; typeset -U keeps it unique)
+typeset -U path
+for _d in "$HOME/.local/bin" /usr/local/go/bin "$HOME/go/bin"; do
+  [[ -d $_d ]] && path=("$_d" $path)
+done
+unset _d
+
+# nvm, if installed
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+
+# Aliases and functions
+[[ -r "$WORKBENCH_HOME/config/shell/aliases.sh" ]] && . "$WORKBENCH_HOME/config/shell/aliases.sh"
+[[ -r "$WORKBENCH_HOME/config/shell/functions.sh" ]] && . "$WORKBENCH_HOME/config/shell/functions.sh"
+
+# kubectl completion, including the `k` alias (needs compinit, which oh-my-zsh runs)
+if command -v kubectl >/dev/null 2>&1 && (( $+functions[compdef] )); then
+  source <(kubectl completion zsh 2>/dev/null)
+  compdef k=kubectl
+fi
