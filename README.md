@@ -118,6 +118,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 | `task hosts` | Registered hosts, resolved SSH target, reachability |
 | `task ssh:copy-id HOST=<alias> [KEY=…pub]` | Install a public key on a new host |
 | `task gh-key HOST=<alias>` | Give a host its own GitHub key (asks before publishing) |
+| `task aliases` | Copy a paste-in installer that adds the aliases and functions to `~/.zshrc` or `~/.bashrc`, no bootstrap needed ([details](docs/config.md#aliases-without-bootstrap)) |
 | `task kk` | Copy the KodeKloud shell snippet to the clipboard |
 | `task check` | `lint` + `secrets` + `repo` |
 | `task test:remote`, `task test:profiles` | Offline remote-flow tests; container smoke tests for the Linux profiles |

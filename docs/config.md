@@ -5,7 +5,7 @@ Each tool has exactly one canonical file, shared by every machine.
 | File | Installed as | Notes |
 |---|---|---|
 | [shell/aliases.sh](../config/shell/aliases.sh) | sourced by bashrc/zshrc | The only aliases file. Optional tools are guarded with `command -v`; nothing shadows a standard command or auto-approves anything destructive. |
-| [shell/functions.sh](../config/shell/functions.sh) | sourced by bashrc/zshrc | `mkcd`, `kns`, `ports`, `wbpath`. |
+| [shell/functions.sh](../config/shell/functions.sh) | sourced by bashrc/zshrc | `mkcd`, `kns`, `ports`, `wbpath`, `up [n]`, `clonecd <url>`. |
 | [shell/bashrc](../config/shell/bashrc), [shell/zshrc](../config/shell/zshrc) | one marker block in `~/.bashrc` (Linux) or `~/.zshrc` (Mac) | History, editors, PATH, nvm, kubectl completion for `k`. |
 | [tmux/tmux.conf](../config/tmux/tmux.conf) | `~/.tmux.conf` symlink | Stock keys, plugin-free, tmux 3.2+. |
 | [vim/vimrc](../config/vim/vimrc) | `~/.vimrc` symlink | Small and YAML-safe. Sources `~/.vimrc.local` for personal plugins or themes. |
@@ -23,6 +23,35 @@ export WORKBENCH_HOME="/path/to/platform-workbench"
 ```
 
 On zsh the block is appended last, so it loads after oh-my-zsh and its definitions win. Keep local secrets and host-specific values in your own rc file outside the block.
+
+## Aliases without bootstrap
+
+To get just the aliases and functions on a machine without running bootstrap (a borrowed laptop, a lab VM, a container), generate a paste-in installer:
+
+```bash
+task aliases                          # Mac: copies it to the clipboard
+scripts/aliases-snippet.sh > aliases-install.txt   # anywhere: save it instead
+```
+
+Paste it into any bash or zsh prompt, including over SSH, or run it with `sh aliases-install.txt`. It:
+
+- picks `~/.zshrc` for zsh, `~/.bashrc` for bash on Linux, or `~/.bash_profile` for bash on macOS. Run `export PW_RC=<file>` first to choose another file;
+- backs the file up to `<file>.pw-backup.<timestamp>`;
+- writes the contents of `aliases.sh` and `functions.sh` between `# >>> platform-workbench aliases >>>` markers, replacing the block in place when you paste a newer version;
+- does nothing if the file already loads platform-workbench through bootstrap.
+
+Run `. ~/.zshrc` (or open a new shell) to load it. To remove it, delete the marker block. The snippet is generated from the canonical files each time, so nothing is duplicated in the repository, and `task lint` checks it stays idempotent.
+
+The installer is wrapped in `/bin/sh -s <<'…'` because zsh rejects pasted `#` comment lines unless `INTERACTIVE_COMMENTS` is set.
+
+## Alias conventions
+
+Aliases follow how the workbench is actually used day to day: `make` targets (`m`, `mr`, `ml`, `mb`), `task` (`t`), Git, kubectl, Terraform workspaces and state, Docker Compose, Homebrew, tmux (`tm` attaches or creates `main`) and resuming AI coding CLI sessions (`clr`, `clc`, `cxr`, `gmr`). A few rules keep them predictable:
+
+- Names that oh-my-zsh's `git`, `kubectl`, `terraform` and `docker` plugins also define keep the oh-my-zsh meaning, so an alias behaves the same in bash and zsh.
+- `tfa` and `tfd` always prompt. There is no auto-approve alias, and no alias for publishing targets such as `make release`; `m release` is short enough.
+- `bu` runs `brew update && brew outdated`, so upgrading stays a separate, deliberate step.
+- Nothing shadows a standard command, so `ls`, `cat` and `df` keep their stock behaviour. Personal replacements such as `ls=eza` belong in your own rc file.
 
 ## tmux
 
