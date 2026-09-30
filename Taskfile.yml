@@ -1,0 +1,180 @@
+version: "3"
+silent: true
+
+vars:
+  ROOT: "{{.TASKFILE_DIR}}"
+  SH: "{{.TASKFILE_DIR}}/scripts"
+  HOSTS:
+    sh: bash -c '. bootstrap/lib/hosts.sh && hosts_list | tr "\n" " "'
+
+tasks:
+  default:
+    cmds: [{task: help}]
+
+  help:
+    desc: Show workbench commands
+    cmds:
+      - |
+        cat <<'EOF'
+        platform-workbench
+          lifecycle  task bootstrap|update|verify [HOST=alias | PROFILE=macos|rhel|ubuntu|proxmox] [-- flags]
+                     task verify:all
+          sessions   task main | task ssh HOST=alias | task rhel | task ubuntu | task proxmox
+          hosts      task hosts | task ssh:copy-id HOST=alias [KEY=~/.ssh/id_ed25519.pub] | task gh-key HOST=alias
+          labs       task kk
+          repo       task lint | secrets | repo | check | test:remote | test:profiles | hooks
+        flags: --dry-run  --yes  --extras go,node,cka
+        hosts: {{.HOSTS}}(bootstrap/hosts.conf)
+        EOF
+
+  # --- Lifecycle -------------------------------------------------------------------
+  bootstrap:
+    desc: Install and wire a profile locally, or on a registered HOST from the Mac
+    cmds: [{task: _lifecycle, vars: {VERB: bootstrap}}]
+  update:
+    desc: Upgrade only profile-managed packages and refresh config
+    cmds: [{task: _lifecycle, vars: {VERB: update}}]
+  verify:
+    desc: Read-only health check (exit 1 on failure)
+    cmds: [{task: _lifecycle, vars: {VERB: verify}}]
+  _lifecycle:
+    internal: true
+    interactive: true
+    cmds:
+      - |
+        host="{{.HOST}}"
+        profile="{{.PROFILE}}"
+        if [ -n "$host" ]; then
+          [ -z "$profile" ] || { echo 'PROFILE comes from bootstrap/hosts.conf when HOST is set' >&2; exit 2; }
+          exec "{{.SH}}/remote.sh" "{{.VERB}}" "$host" {{.CLI_ARGS}}
+        fi
+        if [ -z "$profile" ] && [ "$(uname -s)" = Darwin ]; then profile=macos; fi
+        [ -n "$profile" ] || { echo 'set PROFILE=rhel|ubuntu|proxmox (or HOST=alias from the Mac)' >&2; exit 2; }
+        exec "{{.ROOT}}/bootstrap/workbench.sh" "{{.VERB}}" --profile "$profile" {{.CLI_ARGS}}
+
+  verify:all:
+    desc: Verify the Mac and every registered host
+    cmds:
+      - |
+        rc=0
+        echo "== local =="; task verify PROFILE=macos || rc=1
+        for h in {{.HOSTS}}; do
+          echo "== $h =="; task verify HOST="$h" || rc=1
+        done
+        exit "$rc"
+
+  # --- Sessions --------------------------------------------------------------------
+  main:
+    desc: Attach to (or create) the local tmux session "main"
+    interactive: true
+    cmds: ['exec tmux new-session -A -s main']
+  ssh:
+    desc: SSH to HOST and attach to its tmux "main" (login shell if tmux is absent)
+    interactive: true
+    requires: {vars: [HOST]}
+    cmds: ['ssh -t "{{.HOST}}" ''command -v tmux >/dev/null && exec tmux new-session -A -s main || exec "${SHELL:-/bin/bash}" -l''']
+  rhel:
+    desc: Session on rhel-lab
+    interactive: true
+    cmds: [{task: ssh, vars: {HOST: rhel-lab}}]
+  ubuntu:
+    desc: Session on ubuntu-lab
+    interactive: true
+    cmds: [{task: ssh, vars: {HOST: ubuntu-lab}}]
+  proxmox:
+    desc: Session on proxmox
+    interactive: true
+    cmds: [{task: ssh, vars: {HOST: proxmox}}]
+
+  # --- Hosts -----------------------------------------------------------------------
+  hosts:
+    desc: List registered hosts, their resolved SSH target and reachability (read-only)
+    cmds: ['"{{.SH}}/remote.sh" hosts']
+  ssh:copy-id:
+    desc: First contact - install a PUBLIC key on HOST with ssh-copy-id
+    interactive: true
+    requires: {vars: [HOST]}
+    cmds: ['"{{.SH}}/remote.sh" copy-id "{{.HOST}}" {{if .KEY}}"{{.KEY}}"{{end}}']
+  gh-key:
+    desc: Create a distinct GitHub key on HOST; asks before publishing the public half
+    interactive: true
+    requires: {vars: [HOST]}
+    cmds: ['"{{.SH}}/remote.sh" gh-key "{{.HOST}}"']
+  kk:
+    desc: Copy the KodeKloud/CKA shell snippet to the Mac clipboard
+    cmds: ['pbcopy < "{{.ROOT}}/kodekloud/cka-shell.sh" && echo "copied kodekloud/cka-shell.sh"']
+
+  # --- Repository ------------------------------------------------------------------
+  lint:
+    desc: Syntax-check scripts and validate every canonical config
+    cmds:
+      - |
+        R="{{.ROOT}}"
+        rc=0
+        scripts="$R/bootstrap/workbench.sh $R/bootstrap/lib/*.sh $R/bootstrap/modules/*.sh $R/bootstrap/profiles/*.sh $R/scripts/*.sh $R/config/shell/*.sh $R/kodekloud/*.sh"
+        for f in $scripts "$R/config/shell/bashrc"; do bash -n "$f" || rc=1; done
+        zsh -n "$R/config/shell/zshrc" || rc=1
+        for shell_cmd in /bin/bash /bin/zsh; do
+          if env -i PATH=/usr/bin:/bin WORKBENCH_HOME="$R" "$shell_cmd" -f -c '
+            . "$1"
+            if ! command -v kubectl >/dev/null 2>&1; then ! alias k >/dev/null 2>&1 || exit 1; fi
+            if ! command -v terraform >/dev/null 2>&1; then ! alias tf >/dev/null 2>&1 || exit 1; fi
+            if ! command -v tmux >/dev/null 2>&1; then ! alias ta >/dev/null 2>&1 || exit 1; fi
+          ' _ "$R/config/shell/aliases.sh"; then
+            echo "ok: $shell_cmd aliases load and optional aliases are guarded"
+          else echo "FAIL: $shell_cmd alias source"; rc=1; fi
+        done
+        if command -v shellcheck >/dev/null 2>&1; then
+          shellcheck -x -e SC1091 -S warning $scripts && echo 'ok: shellcheck' || rc=1
+        else
+          echo 'SKIP shellcheck (not installed)'
+        fi
+        vim -u "$R/config/vim/vimrc" -es -c 'qa!' && echo 'ok: vimrc' || rc=1
+        if command -v tmux >/dev/null 2>&1; then
+          tmp_socket=$(mktemp -d)
+          for mode in local ssh; do
+            if [ "$mode" = ssh ]; then export SSH_CONNECTION='lint 0 lint 22'; else unset SSH_CONNECTION; fi
+            if output=$(tmux -S "$tmp_socket/$mode.sock" -f "$R/config/tmux/tmux.conf" new-session -d 2>&1); then status=0; else status=$?; fi
+            if [ "$status" -eq 0 ] && [ -z "$output" ]; then
+              echo "ok: tmux config ($mode)"
+              tmux -S "$tmp_socket/$mode.sock" kill-server 2>/dev/null || true
+            elif echo "$output" | grep -q 'Operation not permitted'; then
+              echo "SKIP tmux runtime check ($mode): sandbox denied socket"
+            else
+              echo "$output"; rc=1
+            fi
+          done
+          rm -rf "$tmp_socket"
+        fi
+        gbin=$(command -v ghostty || true)
+        [ -n "$gbin" ] || { [ -x /Applications/Ghostty.app/Contents/MacOS/ghostty ] && gbin=/Applications/Ghostty.app/Contents/MacOS/ghostty; }
+        if [ -n "$gbin" ]; then
+          if output=$("$gbin" +validate-config --config-file="$R/config/ghostty/config.ghostty" 2>&1); then status=0; else status=$?; fi
+          if [ "$status" -eq 0 ]; then echo 'ok: Ghostty config'
+          elif echo "$output" | grep -q 'SentryInitFailed'; then echo 'SKIP Ghostty validation: sandbox blocked startup'
+          else echo "$output"; rc=1; fi
+        fi
+        git config -f "$R/config/git/gitconfig" --list >/dev/null && echo 'ok: gitconfig' || rc=1
+        for host in {{.HOSTS}}; do
+          ssh -G -F "$R/config/ssh/workbench.conf" "$host" 2>/dev/null | grep -q '^forwardagent no$' || { echo "FAIL: ssh defaults for $host"; rc=1; }
+        done
+        [ "$rc" -eq 0 ] && echo 'ok: ssh defaults'
+        exit "$rc"
+  secrets:
+    desc: Scan files Git would see for credentials and private infrastructure details
+    cmds: ['"{{.SH}}/check-secrets.sh"']
+  repo:
+    desc: Check structure, host registry consistency and Markdown links
+    cmds: ['"{{.SH}}/check-repo.sh"']
+  check:
+    desc: Run lint, secrets and repo checks
+    cmds: [{task: lint}, {task: secrets}, {task: repo}]
+  test:remote:
+    desc: Exercise payload boundaries, host registry and session tasks without connecting
+    cmds: ['"{{.SH}}/test-remote.sh"']
+  test:profiles:
+    desc: Container smoke tests for Linux profiles (-- rhel ubuntu proxmox)
+    cmds: ['"{{.SH}}/test-profiles.sh" {{.CLI_ARGS}}']
+  hooks:
+    desc: Install the pre-commit hook (secret scan + Markdown formatting)
+    cmds: ['"{{.SH}}/install-hooks.sh"']
