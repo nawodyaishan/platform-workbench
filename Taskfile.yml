@@ -21,6 +21,7 @@ tasks:
                      task verify:all
           sessions   task main | task ssh HOST=alias | task rhel | task ubuntu | task proxmox
           hosts      task hosts | task ssh:copy-id HOST=alias [KEY=~/.ssh/id_ed25519.pub] | task gh-key HOST=alias
+          shell      task aliases   (paste-in installer for the aliases and functions)
           labs       task kk
           repo       task lint | secrets | repo | check | test:remote | test:profiles | hooks
         flags: --dry-run  --yes  --extras go,node,cka
@@ -100,6 +101,15 @@ tasks:
     interactive: true
     requires: {vars: [HOST]}
     cmds: ['"{{.SH}}/remote.sh" gh-key "{{.HOST}}"']
+  aliases:
+    desc: Copy a paste-in installer for the aliases and functions (prints it without pbcopy)
+    cmds:
+      - |
+        if command -v pbcopy >/dev/null 2>&1; then
+          "{{.SH}}/aliases-snippet.sh" | pbcopy && echo 'copied: paste into any bash or zsh prompt, e.g. over SSH'
+        else
+          "{{.SH}}/aliases-snippet.sh"
+        fi
   kk:
     desc: Copy the KodeKloud/CKA shell snippet to the Mac clipboard
     cmds: ['pbcopy < "{{.ROOT}}/kodekloud/cka-shell.sh" && echo "copied kodekloud/cka-shell.sh"']
@@ -126,6 +136,14 @@ tasks:
             echo "ok: $shell_cmd aliases load and optional aliases are guarded"
           else echo "FAIL: $shell_cmd alias source"; rc=1; fi
         done
+        snip_dir=$(mktemp -d)
+        "$R/scripts/aliases-snippet.sh" > "$snip_dir/snippet"
+        printf 'alias mine=true\n' > "$snip_dir/rc"
+        for _ in 1 2; do PW_RC="$snip_dir/rc" TMPDIR="$snip_dir" /bin/sh "$snip_dir/snippet" >/dev/null || rc=1; done
+        if [ "$(grep -c '^# >>> platform-workbench aliases >>>$' "$snip_dir/rc")" = 1 ] && grep -qx 'alias mine=true' "$snip_dir/rc" \
+          && bash -n "$snip_dir/rc" && zsh -n "$snip_dir/rc"; then echo 'ok: aliases paste-in installer is idempotent'
+        else echo 'FAIL: aliases paste-in installer'; rc=1; fi
+        rm -rf "$snip_dir"
         if command -v shellcheck >/dev/null 2>&1; then
           shellcheck -x -e SC1091 -S warning $scripts && echo 'ok: shellcheck' || rc=1
         else

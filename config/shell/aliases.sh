@@ -6,6 +6,7 @@
 # anything destructive; no paths, hosts or secrets. Functions live in functions.sh.
 # Names shared with oh-my-zsh plugins keep the oh-my-zsh meaning, so bash and zsh agree.
 # kodekloud/cka-shell.sh is the only other place aliases are defined (paste-in).
+# scripts/aliases-snippet.sh turns this file into a paste-in installer (task aliases).
 
 # --- General ---------------------------------------------------------------------
 alias c='clear'
