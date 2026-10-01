@@ -18,7 +18,7 @@ Neovim ≥0.11 ships this natively; adding `nvim-lspconfig` would just be a seco
 
 Consistent with this repo never delegating tool installation to an in-app package manager (`lang.sh` installs Go itself, `k8s.sh` installs kubectl itself). `nvim.sh` installs `gopls` via `go install golang.org/x/tools/gopls@latest` (Go already comes from the Brewfile) and attempts `npm install -g typescript-language-server yaml-language-server` only `if have npm`. `lua-language-server` is brew-packaged, so it joins `neovim` in `macos.Brewfile` and is handled by the existing `base_bootstrap`/`brew bundle` path — `nvim.sh` doesn't run its own brew calls for either.
 
-### Plugin set — 4 plugins total
+### Plugin set — 6 plugins total (amended 2026-10-01; originally 4)
 
 | Plugin | Role | Why this one |
 |---|---|---|
@@ -26,7 +26,10 @@ Consistent with this repo never delegating tool installation to an in-app packag
 | `blink.cmp` | completion | prebuilt binary (no Rust toolchain needed at install time), the modern default across every 2025 reference config surveyed |
 | `fzf-lua` | fuzzy finder | thin wrapper around the `fzf`/`ripgrep` binaries the Brewfile already installs — no second fuzzy-matching implementation the way Telescope brings one |
 | `gitsigns.nvim` | git gutter/hunks | tiny, single-purpose, directly useful while editing tracked Go/TS/YAML files |
+| `which-key.nvim` | key discovery | shows pending `<leader>` keys; added after comparing with kickstart.nvim |
+| `mini.surround` | surround edits | standalone repo (not all of mini.nvim); `sa`/`sd`/`sr` |
 
+Note: `nvim-treesitter` `main` compiles parsers with the `tree-sitter` CLI, so `tree-sitter-cli` is in the Brewfile and `nvim_verify` warns if it is missing. Mason, Telescope, conform, LuaSnip and format-on-save from kickstart.nvim were deliberately not adopted.
 No file tree, no dashboard, no DAP, no formatter/linter plugin, no colorscheme plugin — `retrobox` (built into Neovim core since 0.10) is the default colorscheme, set once in `options.lua`. Sensible native-Neovim defaults borrowed from `advent-of-nvim`: `mapleader = " "`, `clipboard = "unnamedplus"`, `relativenumber = true`, and a zero-dependency `TextYankPost` highlight-on-yank autocmd. A `lua/user/init.lua` `pcall(require, "user")` hook at the end of `init.lua` is the escape hatch for personal, unmanaged extras (parallels `~/.vimrc.local`), silently skipped when absent.
 
 Not adopted from `advent-of-nvim`: its `plugin/*.lua` native-autoload directory for standalone features (e.g. `floaterminal.lua`). It's a legitimate zero-dependency technique, but this repo's existing modules (`shell.sh`, `vimrc`) always wire things through one explicit `require`/`source` chain rather than implicit directory scanning, so `init.lua` keeps explicit `require("config.x")` lines for consistency with the rest of this repo, not because the autoload mechanism is worse.

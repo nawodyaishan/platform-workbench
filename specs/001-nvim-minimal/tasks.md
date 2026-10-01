@@ -42,3 +42,8 @@ Note: T8's real `bootstrap --profile macos` run (not `--dry-run`) installs brew 
 Combined approval for `spec.md` + `plan.md` + `tasks.md` (this revision set, drafted 2026-09-30) is recorded in `spec.md`'s "## Approval" section. Status: **approved** (nawodyaishan, chat, 2026-09-30), including authorization for T8's real bootstrap run.
 
 Continuation state: Batch 1 complete. Batch 2's docs updates (T6, T7) and `task check` (first half of T8) are complete. The only remaining step is the real `bootstrap --profile macos` run (twice, to confirm idempotency), which needs the user to run it directly — the session's auto-mode classifier blocked the agent from running it despite the recorded authorization.
+
+### Amendment batch — 2026-10-01 (kickstart comparison)
+
+- Tasks: Lua config refresh (options, diagnostics, LspAttach, fzf-lua LSP pickers, gitsigns `on_attach`, `PackChanged`, generic treesitter loader, which-key, mini.surround), `tree-sitter-cli` in the Brewfile and `nvim_verify`, docs/spec/plan updates.
+- State: **complete**. `task check` passes; headless load exits 0. With `tree-sitter-cli` installed (2026-10-01) parsers compile, treesitter highlighting is active on a `.go` buffer, gopls attaches, `]d` opens the diagnostic float, and `saiw)` surrounds. Interactive fzf-lua pickers and which-key popups are still only checked by registration, not by eye.

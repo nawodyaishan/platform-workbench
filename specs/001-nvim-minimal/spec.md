@@ -11,10 +11,10 @@ In scope:
 - New canonical `config/nvim/` directory (`init.lua` + a handful of `lua/config/*.lua` files), following the "one canonical file per tool" rule at directory granularity.
 - New `bootstrap/modules/nvim.sh` module (`nvim_bootstrap`/`_update`/`_verify`), added to the `macos` profile only.
 - `~/.config/nvim` symlinked to `config/nvim` via the existing `link_file`/`check_link` pair, backing up whatever is already there (this machine currently has an unmanaged, hand-rolled ~650-line config at `~/.config/nvim`).
-- `neovim` and `lua-language-server` added to `bootstrap/profiles/macos.Brewfile`.
+- `neovim`, `lua-language-server` and `tree-sitter-cli` added to `bootstrap/profiles/macos.Brewfile`.
 - `gopls` installed via `go install`, mirroring `lang.sh`'s existing Go-tooling pattern (Go already ships from the Brewfile on macOS).
 - Native LSP wiring (`vim.lsp.config`/`vim.lsp.enable`, Neovim ≥0.11, no `nvim-lspconfig`) for `gopls` (Go), `ts_ls` (TypeScript/JavaScript/TSX), `yamlls` (YAML), `lua_ls` (editing the config itself).
-- A minimal, native `vim.pack`-based plugin set (Neovim ≥0.12, which is what brew's current `neovim` formula installs): `nvim-treesitter` (go/gomod/gowork/typescript/tsx/javascript/yaml/json/lua/markdown parsers), `blink.cmp` (completion), `fzf-lua` (fuzzy finder), `gitsigns.nvim`.
+- A minimal, native `vim.pack`-based plugin set (Neovim ≥0.12, which is what brew's current `neovim` formula installs): `nvim-treesitter` (go/gomod/gowork/typescript/tsx/javascript/yaml/json/lua/markdown parsers), `blink.cmp` (completion), `fzf-lua` (fuzzy finder), `gitsigns.nvim`, `which-key.nvim` (key discovery) and `mini.surround` (surround edits). `tree-sitter-cli` joins the Brewfile because nvim-treesitter's `main` branch compiles parsers with it.
 - `docs/config.md` gains a "## Neovim" section next to the existing "## Vim" one, plus a `config/nvim/` row in the managed-configuration table. `README.md`'s macOS profile row gains "Neovim" to its "What it gets" list.
 - `nvim_verify` checks: the symlink, the Neovim version floor, Brewfile formulae present (via `brew bundle check`), `gopls` on `PATH`, and a headless load smoke test (`nvim --headless -u config/nvim/init.lua -c 'qa'` exits 0).
 
@@ -24,7 +24,7 @@ Out of scope (explicitly excluded):
 - Linux lab profiles (`rhel`, `ubuntu`, `proxmox`) — Neovim stays macOS-only. Lab hosts keep vanilla vim, by construction (the module is only added to `macos.sh`'s `MODULES`), not just by convention.
 - Mason or any in-editor package manager. Language servers are installed by the bootstrap module / brew / `go install`, the same way this repo already manages every other tool.
 - Managing Node.js/npm itself — an earlier `nvm` marker block was deliberately removed from this repo (see the legacy-block list in `bootstrap/lib/common.sh`). `typescript-language-server` and `yaml-language-server` (both npm-distributed) are installed by the module only when `npm` is already on `PATH`; otherwise the module reports `na` with a one-line prerequisite note, and `nvim_verify` reports the same servers as `warn`, never `bad`.
-- Debugging (DAP), a file-tree plugin, a dashboard/start screen, a formatter/linter plugin, or any plugin not in the four-plugin list above. A personal, unmanaged `lua/user/init.lua` extension point (parallel to vimrc's `~/.vimrc.local`) is provided for local additions; its contents are never part of this repo.
+- Debugging (DAP), a file-tree plugin, a dashboard/start screen, a formatter/linter plugin, or any plugin not in the six-plugin list above. A personal, unmanaged `lua/user/init.lua` extension point (parallel to vimrc's `~/.vimrc.local`) is provided for local additions; its contents are never part of this repo.
 - Format-on-save. Formatting is manual (`vim.lsp.buf.format()` on a keymap), matching this repo's "no surprises" tooling stance (vimrc doesn't auto-format either).
 
 ## Acceptance criteria
@@ -59,3 +59,5 @@ None blocking. Plugin-manager and LSP-wiring choices are design decisions record
 ## Approval
 
 Status: **approved**. Approver: nawodyaishan (chat, 2026-09-30). Scope covered: this revision of `spec.md`, `plan.md` and `tasks.md` as drafted 2026-09-30. Authorization to implement both batches, including the real (non-`--dry-run`) `bootstrap --profile macos` run needed for Batch 2's idempotency check, was given in the same message.
+
+Amendment 2026-10-01: plugin set grew from four to six (`which-key.nvim`, `mini.surround`), `tree-sitter-cli` added to the Brewfile, and the config adopted native-option, diagnostics, LspAttach, fzf-lua LSP picker and gitsigns-keymap improvements after comparison with `nvim-lua/kickstart.nvim`. Approver: nawodyaishan (chat, 2026-10-01, "go ahead" to the stated plan). Mason, Telescope, conform and format-on-save remain excluded.
