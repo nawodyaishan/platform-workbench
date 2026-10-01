@@ -48,7 +48,7 @@ The installer is wrapped in `/bin/sh -s <<'…'` because zsh rejects pasted `#` 
 
 ## Alias conventions
 
-Aliases follow how the workbench is actually used day to day: `make` targets (`m`, `mr`, `ml`, `mb`), `task` (`t`), Git, kubectl, Terraform workspaces and state, Docker Compose, Homebrew, tmux (`tm` attaches or creates `main`) and resuming AI coding CLI sessions (`clr`, `clc`, `cxr`, `gmr`). A few rules keep them predictable:
+Aliases follow how the workbench is actually used day to day: `make` targets (`m`, `mr`, `ml`, `mb`), `task` (`t`), Git and GitHub CLI, kubectl, Terraform (workspaces, state, `tflint`, `terragrunt`), Helm (`hm*`), cloud CLIs (AWS `aws*`, Azure `az*`, Google Cloud `gcp*`; read-only helpers plus `awsp` to switch profiles), Ansible (`ap`, `apc` for check mode, `ainv`, `alint`), Docker and Podman (`d*` / `p*`), Linux ops (`scs`, `scf`, `jc*`, `ipa`, `mem`, `psg`), Tailscale (`ts*`), Homebrew, tmux (`tm` attaches or creates `main`) and resuming AI coding CLI sessions (`clr`, `clc`, `cxr`, `gmr`). A few rules keep them predictable:
 
 - Names that oh-my-zsh's `git`, `kubectl`, `terraform` and `docker` plugins also define keep the oh-my-zsh meaning, so an alias behaves the same in bash and zsh.
 - `tfa` and `tfd` always prompt. There is no auto-approve alias, and no alias for publishing targets such as `make release`; `m release` is short enough.

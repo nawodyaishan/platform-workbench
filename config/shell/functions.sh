@@ -45,3 +45,14 @@ clonecd() {
   git clone -- "$1" "$_d" && cd -- "$_d" || { unset _d; return 1; }
   unset _d
 }
+
+# Set the AWS CLI profile for this shell; with no argument, list profiles and show the current one.
+awsp() {
+  if [ -z "$1" ]; then
+    aws configure list-profiles 2>/dev/null || echo "aws CLI not available" >&2
+    echo "current: ${AWS_PROFILE:-<default>}"
+    return 0
+  fi
+  export AWS_PROFILE="$1"
+  echo "AWS_PROFILE=$AWS_PROFILE"
+}

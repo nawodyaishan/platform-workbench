@@ -132,6 +132,13 @@ tasks:
             if ! command -v tmux >/dev/null 2>&1; then ! alias ta >/dev/null 2>&1 || exit 1; fi
             if ! command -v docker >/dev/null 2>&1; then ! alias dps >/dev/null 2>&1 || exit 1; fi
             if ! command -v brew >/dev/null 2>&1; then ! alias bu >/dev/null 2>&1 || exit 1; fi
+            if ! command -v helm >/dev/null 2>&1; then ! alias hm >/dev/null 2>&1 || exit 1; fi
+            if ! command -v aws >/dev/null 2>&1; then ! alias awsid >/dev/null 2>&1 || exit 1; fi
+            if ! command -v az >/dev/null 2>&1; then ! alias azacc >/dev/null 2>&1 || exit 1; fi
+            if ! command -v gcloud >/dev/null 2>&1; then ! alias gcpauth >/dev/null 2>&1 || exit 1; fi
+            if ! command -v ansible-playbook >/dev/null 2>&1; then ! alias ap >/dev/null 2>&1 || exit 1; fi
+            if ! command -v podman >/dev/null 2>&1; then ! alias pps >/dev/null 2>&1 || exit 1; fi
+            if ! command -v tailscale >/dev/null 2>&1; then ! alias tss >/dev/null 2>&1 || exit 1; fi
           ' _ "$R/config/shell/aliases.sh"; then
             echo "ok: $shell_cmd aliases load and optional aliases are guarded"
           else echo "FAIL: $shell_cmd alias source"; rc=1; fi
