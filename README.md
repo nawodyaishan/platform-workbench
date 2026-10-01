@@ -150,6 +150,8 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 
 Lifecycle flags go after `--`: `--dry-run`, `--yes`, `--extras go,node,cka`.
 
+Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with underscores for colons: `make check`, `make test-remote`, `make bootstrap HOST=ubuntu-lab ARGS="--dry-run"`. Run `make` on its own for the summary.
+
 ## Safety model
 
 > [!IMPORTANT]
