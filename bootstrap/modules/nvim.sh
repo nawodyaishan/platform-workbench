@@ -56,6 +56,7 @@ nvim_verify() {
   if have nvim && _nvim_version_ge_12; then ok "nvim $(nvim --version | head -1) (>= 0.12, has vim.pack)"
   else bad "nvim missing or older than 0.12"; fi
 
+  have tree-sitter && ok "tree-sitter CLI" || warn "tree-sitter CLI missing (nvim-treesitter cannot build parsers; brew install tree-sitter-cli)"
   have gopls && ok "gopls" || bad "gopls missing"
   have typescript-language-server && ok "typescript-language-server" || warn "typescript-language-server missing (needs npm)"
   have yaml-language-server && ok "yaml-language-server" || warn "yaml-language-server missing (needs npm)"
