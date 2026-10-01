@@ -19,7 +19,7 @@
 
 A homelab tends to drift. Every VM ends up with its own `.bashrc`, the tmux config gets copied around and forked, SSH aliases live in three places, and nobody remembers which box has which version of `kubectl`. **platform-workbench** fixes that with plain Bash and no agents or daemons:
 
-- **One canonical config per tool.** Shell, tmux, Vim, Git, SSH and Ghostty each have exactly one file under [`config/`](config/), and every machine uses it.
+- **One canonical config per tool.** Shell, tmux, Vim, Git, SSH and Ghostty (plus optional Herdr) each have exactly one file under [`config/`](config/), and every machine uses it.
 - **Profiles instead of snowflakes.** Each machine gets exactly one profile: `macos`, `rhel`, `ubuntu` or `proxmox`. A profile is a list of modules and packages. That's all.
 - **Three verbs.** `bootstrap` installs and wires things up, `update` upgrades only what the profile manages, and `verify` is a read-only health check that exits non-zero on drift.
 - **Driven from the Mac.** A fresh Linux host can be bootstrapped over SSH *before* this repository is cloned on it. It needs no Git credentials and no forwarded keys.
@@ -158,7 +158,7 @@ bootstrap/
   lib/                OS detection, package managers, marker blocks, host registry
   modules/            base shell git ssh tailscale containers k8s lang nvim cka
   profiles/           macos (+ Brewfile), rhel, ubuntu, proxmox
-config/               canonical shell, tmux, vim, nvim, git, ssh and ghostty configs
+config/               canonical shell, tmux, vim, nvim, herdr, git, ssh and ghostty configs
 kodekloud/            paste-in shell snippet for disposable lab nodes
 scripts/              remote transport, secret scan, repo checks, tests, git hook
 docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, ssh-tutorial/

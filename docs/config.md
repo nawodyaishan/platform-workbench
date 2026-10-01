@@ -7,7 +7,8 @@ Each tool has exactly one canonical file, shared by every machine.
 | [shell/aliases.sh](../config/shell/aliases.sh) | sourced by bashrc/zshrc | The only aliases file. Optional tools are guarded with `command -v`; nothing shadows a standard command or auto-approves anything destructive. |
 | [shell/functions.sh](../config/shell/functions.sh) | sourced by bashrc/zshrc | `mkcd`, `kns`, `ports`, `wbpath`, `up [n]`, `clonecd <url>`. |
 | [shell/bashrc](../config/shell/bashrc), [shell/zshrc](../config/shell/zshrc) | one marker block in `~/.bashrc` (Linux) or `~/.zshrc` (Mac) | History, editors, PATH, nvm, kubectl completion for `k`. |
-| [tmux/tmux.conf](../config/tmux/tmux.conf) | `~/.tmux.conf` symlink | Stock keys, plugin-free, tmux 3.2+. |
+| [tmux/tmux.conf](../config/tmux/tmux.conf) | `~/.tmux.conf` symlink | Prefix `Ctrl-b`, Vim copy mode, plugin-free, tmux 3.2+. |
+| [herdr/config.toml](../config/herdr/config.toml) | `~/.config/herdr/config.toml` symlink (macOS) | Optional tmux alternative: `Ctrl-b` prefix, catppuccin. |
 | [vim/vimrc](../config/vim/vimrc) | `~/.vimrc` symlink | Small and YAML-safe. Sources `~/.vimrc.local` for personal plugins or themes. |
 | [nvim/](../config/nvim/) | `~/.config/nvim` symlink | Mac only; minimal daily-driver for Go/TypeScript/YAML. See below. |
 | [git/gitconfig](../config/git/gitconfig) | `include.path` in `~/.gitconfig` | Defaults only, no identity. |
@@ -56,7 +57,30 @@ Aliases follow how the workbench is actually used day to day: `make` targets (`m
 
 ## tmux
 
-Keys stay stock on purpose: prefix `Ctrl-b`, `%`/`"` splits, default copy mode. That way muscle memory matches a fresh lab node or an exam terminal. The config adds mouse support, OSC 52 clipboard copying (copy-mode selections reach the Mac clipboard even over SSH), a 100k scrollback, a Catppuccin Mocha status bar matching Ghostty, and a per-host accent (mauve locally, green over SSH). The status glyphs need a Nerd Font on the Mac terminal. Nothing needs installing on the remote.
+The main multiplexer. Launch with `tm` (`tmux new-session -A -s main`). Prefix is `Ctrl-b`; `Ctrl-b Ctrl-b` sends a literal `Ctrl-b` to the program (Vim page-up). Stock keys stay (`c n p w d [ z x %`, `"`, arrows, `0`-`9` window jumps), and the config adds `h/j/k/l` pane focus, `|` and `-` splits, and `R` to reload. All splits and new windows open in the current pane's directory. Windows and panes number from 1. Copy mode is Vim style: `v` selects, `y` copies, `Ctrl-v` toggles a rectangle. Escape time is 50 ms, history 100k lines, focus events on, mouse on (everything also works from the keyboard).
+
+Clipboard is OSC 52 only (`set-clipboard on`, no `pbcopy`/`xclip`): Ghostty writes the local clipboard, on the Mac and over SSH alike. Colours use `tmux-256color` (falling back to `screen-256color`) plus `terminal-features` for RGB; `TERM` is never overridden in shell startup files. The status bar (Catppuccin Mocha, per-host accent: mauve locally, green over SSH) shows session, windows, host, date and time; the glyphs need a Nerd Font on the Mac terminal. No bindings exist outside the prefix, so Ghostty, shells, Vim and Neovim keep every normal key.
+
+Reload: `Ctrl-b R`, or `tmux source-file ~/.tmux.conf`. Existing sessions keep the old prefix until reloaded.
+
+## Herdr (optional)
+
+Herdr is a separate multiplexer, not a tmux layer. Launch it on its own with `herdr`; launch tmux with `tm`. Do not run one inside the other (`allow_nested = false`). Install with `brew install herdr` (or `curl -fsSL https://herdr.dev/install.sh | sh`); the workbench only links the config. Validate with `herdr config check`; reload a running server with `herdr server reload-config` or `Ctrl-b Shift-R`.
+
+The config sets only the prefix, the `catppuccin` theme, `|` as an extra side-by-side split, in-app toasts for background agents and symbol status indicators; everything else is Herdr's default. Option+Left/Right word jumps inside Herdr panes (for example the Claude Code prompt) rely on the Ghostty config unbinding Ghostty's default `esc:b`/`esc:f` for those keys, with a matching zsh `bindkey` in `config/shell/zshrc`. Agent visibility is the sidebar (`Ctrl-b b` toggles it), workspaces are `Ctrl-b w` / `Ctrl-b g`.
+
+| Action | tmux | Herdr |
+|---|---|---|
+| Prefix | `Ctrl-b` | `Ctrl-b` |
+| Pane focus | `h/j/k/l` | `h/j/k/l` |
+| Split side-by-side / stacked | `\|` / `-` | `\|` or `v` / `-` |
+| New window / tab | `c` | `c` |
+| Next / previous | `n` / `p` | `n` / `p` |
+| Zoom, close pane | `z`, `x` | `z`, `x` |
+| Copy mode | `[`, `v` select, `y` copy | `[`, `v` select, `y` copy |
+| **Detach** | **`d`** | **`q`** |
+| Workspace / session picker | `w`, `s` | `w`, `g` |
+| Reload config | `R` | `Shift-R` |
 
 ## Vim
 
