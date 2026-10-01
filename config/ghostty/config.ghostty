@@ -81,6 +81,13 @@ keybind = cmd+shift+j=write_scrollback_file:paste
 # Clear screen (without losing scrollback)
 keybind = cmd+k=clear_screen
 
+# Option+Left/Right: Ghostty's default sends ESC b / ESC f, which Herdr splits into a bare
+# Esc plus a literal "f"/"b" (word jump turns into typed letters in Claude Code). Unbound,
+# they send the standard CSI 1;3D/C, which Herdr and Claude Code decode as Alt+arrow.
+# config/shell/zshrc binds the same sequences, so plain shells still jump by word.
+keybind = alt+left=unbind
+keybind = alt+right=unbind
+
 # Reload config without restarting
 keybind = cmd+shift+r=reload_config
 

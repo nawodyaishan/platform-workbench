@@ -21,6 +21,10 @@ unset _d
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
 
+# Option+Left/Right word jumps (Ghostty sends CSI 1;3D/C, see config/ghostty/config.ghostty)
+bindkey '^[[1;3D' backward-word
+bindkey '^[[1;3C' forward-word
+
 # Aliases and functions
 [[ -r "$WORKBENCH_HOME/config/shell/aliases.sh" ]] && . "$WORKBENCH_HOME/config/shell/aliases.sh"
 [[ -r "$WORKBENCH_HOME/config/shell/functions.sh" ]] && . "$WORKBENCH_HOME/config/shell/functions.sh"
