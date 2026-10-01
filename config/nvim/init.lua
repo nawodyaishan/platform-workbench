@@ -1,3 +1,6 @@
+-- Byte-code cache for Lua modules: faster startup. Must come before the requires.
+vim.loader.enable()
+
 require("config.options")
 require("config.pack")
 require("config.treesitter")
