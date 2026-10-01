@@ -15,6 +15,30 @@
 
 </div>
 
+<div align="center">
+
+### 🧰 What's in the box
+
+<sub>Every badge is wired by a module, one canonical config each. Click one to open its file.</sub>
+
+<table>
+<tr><td align="right"><b>🖥️ Terminal</b></td><td align="left"><a href="config/ghostty/config.ghostty"><img alt="Ghostty" src="https://img.shields.io/badge/Ghostty-3551F3?style=flat-square&logo=ghostty&logoColor=white"></a> <a href="config/tmux/tmux.conf"><img alt="tmux" src="https://img.shields.io/badge/tmux-1BB91F?style=flat-square&logo=tmux&logoColor=white"></a> <a href="config/herdr/config.toml"><img alt="Herdr" src="https://img.shields.io/badge/Herdr-6C7086?style=flat-square"></a> <img alt="Catppuccin Mocha" src="https://img.shields.io/badge/Catppuccin%20Mocha-CBA6F7?style=flat-square"> <img alt="JetBrainsMono NF" src="https://img.shields.io/badge/JetBrainsMono%20NF-000000?style=flat-square"></td></tr>
+<tr><td align="right"><b>✍️ Editors</b></td><td align="left"><a href="config/nvim/"><img alt="Neovim" src="https://img.shields.io/badge/Neovim-57A143?style=flat-square&logo=neovim&logoColor=white"></a> <a href="config/vim/vimrc"><img alt="Vim, exam parity" src="https://img.shields.io/badge/Vim%20--%20exam%20parity-019733?style=flat-square&logo=vim&logoColor=white"></a> <img alt="blink.cmp" src="https://img.shields.io/badge/blink.cmp-7AA2F7?style=flat-square"> <img alt="fzf-lua" src="https://img.shields.io/badge/fzf--lua-F5A97F?style=flat-square"> <img alt="which-key" src="https://img.shields.io/badge/which--key-8AADF4?style=flat-square"> <img alt="treesitter" src="https://img.shields.io/badge/treesitter-A6DA95?style=flat-square"> <img alt="gitsigns" src="https://img.shields.io/badge/gitsigns-F28779?style=flat-square"></td></tr>
+<tr><td align="right"><b>🐚 Shell</b></td><td align="left"><a href="config/shell/zshrc"><img alt="zsh" src="https://img.shields.io/badge/zsh-F15A24?style=flat-square&logo=zsh&logoColor=white"></a> <a href="config/shell/bashrc"><img alt="bash 3.2+" src="https://img.shields.io/badge/bash%203.2+-4EAA25?style=flat-square&logo=gnubash&logoColor=white"></a> <a href="config/shell/aliases.sh"><img alt="aliases + functions" src="https://img.shields.io/badge/aliases%20+%20functions-555555?style=flat-square"></a> <img alt="fzf" src="https://img.shields.io/badge/fzf-E5B567?style=flat-square"> <img alt="ripgrep" src="https://img.shields.io/badge/ripgrep-555555?style=flat-square"> <img alt="fd" src="https://img.shields.io/badge/fd-555555?style=flat-square"> <img alt="jq · yq" src="https://img.shields.io/badge/jq%20·%20yq-555555?style=flat-square"></td></tr>
+<tr><td align="right"><b>🔀 Git & SSH</b></td><td align="left"><a href="config/git/gitconfig"><img alt="Git" src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white"></a> <img alt="GitHub CLI" src="https://img.shields.io/badge/GitHub%20CLI-181717?style=flat-square&logo=github&logoColor=white"> <a href="config/ssh/workbench.conf"><img alt="OpenSSH" src="https://img.shields.io/badge/OpenSSH-000000?style=flat-square&logo=openssh&logoColor=white"></a> <img alt="Tailscale" src="https://img.shields.io/badge/Tailscale-242424?style=flat-square&logo=tailscale&logoColor=white"></td></tr>
+<tr><td align="right"><b>☸️ Platform</b></td><td align="left"><img alt="kubectl" src="https://img.shields.io/badge/kubectl-326CE5?style=flat-square&logo=kubernetes&logoColor=white"> <img alt="Helm" src="https://img.shields.io/badge/Helm-0F1689?style=flat-square&logo=helm&logoColor=white"> <img alt="k9s" src="https://img.shields.io/badge/k9s-326CE5?style=flat-square"> <img alt="kubectx · stern · kind" src="https://img.shields.io/badge/kubectx%20·%20stern%20·%20kind-326CE5?style=flat-square"> <img alt="Terraform" src="https://img.shields.io/badge/Terraform-844FBA?style=flat-square&logo=terraform&logoColor=white"> <img alt="Ansible" src="https://img.shields.io/badge/Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white"> <img alt="OrbStack / Docker" src="https://img.shields.io/badge/OrbStack%20/%20Docker-2496ED?style=flat-square&logo=docker&logoColor=white"></td></tr>
+<tr><td align="right"><b>🧪 Languages & LSP</b></td><td align="left"><img alt="Go + gopls" src="https://img.shields.io/badge/Go%20+%20gopls-00ADD8?style=flat-square&logo=go&logoColor=white"> <img alt="TypeScript LS" src="https://img.shields.io/badge/TypeScript%20LS-3178C6?style=flat-square&logo=typescript&logoColor=white"> <img alt="yaml-language-server" src="https://img.shields.io/badge/yaml--language--server-CB171E?style=flat-square&logo=yaml&logoColor=white"> <img alt="lua-language-server" src="https://img.shields.io/badge/lua--language--server-2C2D72?style=flat-square&logo=lua&logoColor=white"></td></tr>
+<tr><td align="right"><b>🛡️ Quality</b></td><td align="left"><img alt="shellcheck" src="https://img.shields.io/badge/shellcheck-4EAA25?style=flat-square"> <img alt="shfmt" src="https://img.shields.io/badge/shfmt-4EAA25?style=flat-square"> <img alt="go-task" src="https://img.shields.io/badge/go--task-29BEB0?style=flat-square&logo=task&logoColor=white"> <img alt="secret scan" src="https://img.shields.io/badge/secret%20scan-D73A4A?style=flat-square"></td></tr>
+</table>
+
+```text
+dotfiles ──► config/ ──symlink/marker──► ~/.zshrc ~/.tmux.conf ~/.config/nvim ~/.gitconfig …
+   │                                         ▲
+   └── bootstrap/modules/*.sh ──► profile ───┘   (macos · rhel · ubuntu · proxmox)
+```
+
+</div>
+
 ---
 
 A homelab tends to drift. Every VM ends up with its own `.bashrc`, the tmux config gets copied around and forked, SSH aliases live in three places, and nobody remembers which box has which version of `kubectl`. **platform-workbench** fixes that with plain Bash and no agents or daemons:
