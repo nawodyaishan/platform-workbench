@@ -1,0 +1,28 @@
+# Herdr: optional alternative to tmux (config/tmux/tmux.conf). Deployed to
+# ~/.config/herdr/config.toml. Everything not set here keeps Herdr's default; list all
+# keys with `herdr --default-config`, check this file with `herdr config check`.
+# Reload in a running server: prefix+shift+r, or `herdr server reload-config`.
+
+# Skip the first-run setup screen.
+onboarding = false
+
+[theme]
+name = "catppuccin"
+
+[keys]
+# Same prefix as tmux. Defaults already match tmux for h/j/k/l pane focus, c new tab,
+# n/p next/previous tab, 1..9 tab switch, z zoom, x close pane, [ copy mode (v select, y copy).
+prefix = "ctrl+b"
+# Add tmux's side-by-side split (prefix+|) next to Herdr's own prefix+v. Stacked split stays
+# on Herdr's prefix+minus, which is tmux's prefix+- as well. New panes inherit the cwd
+# ([terminal] new_cwd defaults to "follow").
+split_vertical = ["prefix+v", "prefix+|"]
+# Detach stays at Herdr's default prefix+q (tmux uses prefix+d, which Herdr does not bind).
+
+[ui.toast]
+# Visual in-app notification when a background agent finishes or needs attention.
+delivery = "herdr"
+
+[ui]
+# Agent states shown as distinct glyphs, not only colours.
+status_indicators = "symbols"
