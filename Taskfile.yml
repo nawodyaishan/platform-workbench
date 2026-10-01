@@ -111,8 +111,16 @@ tasks:
           "{{.SH}}/aliases-snippet.sh"
         fi
   kk:
-    desc: Copy the KodeKloud/CKA shell snippet to the Mac clipboard
-    cmds: ['pbcopy < "{{.ROOT}}/kodekloud/cka-shell.sh" && echo "copied kodekloud/cka-shell.sh"']
+    desc: Copy a KodeKloud shell snippet to the Mac clipboard (TOPIC=cka|k8s|terraform|aws|ansible|linux, default cka)
+    cmds:
+      - |
+        topic="{{.TOPIC}}"
+        case "$topic" in
+          ''|cka) f="{{.ROOT}}/kodekloud/cka-shell.sh" ;;
+          k8s|terraform|aws|ansible|linux) f="{{.ROOT}}/kodekloud/$topic/$topic-shell.sh" ;;
+          *) echo "unknown TOPIC '$topic' (cka|k8s|terraform|aws|ansible|linux)" >&2; exit 2 ;;
+        esac
+        pbcopy < "$f" && echo "copied ${f#"{{.ROOT}}/"}"
 
   # --- Repository ------------------------------------------------------------------
   lint:
@@ -121,7 +129,7 @@ tasks:
       - |
         R="{{.ROOT}}"
         rc=0
-        scripts="$R/bootstrap/workbench.sh $R/bootstrap/lib/*.sh $R/bootstrap/modules/*.sh $R/bootstrap/profiles/*.sh $R/scripts/*.sh $R/config/shell/*.sh $R/kodekloud/*.sh"
+        scripts="$R/bootstrap/workbench.sh $R/bootstrap/lib/*.sh $R/bootstrap/modules/*.sh $R/bootstrap/profiles/*.sh $R/scripts/*.sh $R/config/shell/*.sh $R/kodekloud/*.sh $R/kodekloud/*/*.sh"
         for f in $scripts "$R/config/shell/bashrc"; do bash -n "$f" || rc=1; done
         zsh -n "$R/config/shell/zshrc" || rc=1
         for shell_cmd in /bin/bash /bin/zsh; do

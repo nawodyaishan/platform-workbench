@@ -143,7 +143,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 | `task ssh:copy-id HOST=<alias> [KEY=…pub]` | Install a public key on a new host |
 | `task gh-key HOST=<alias>` | Give a host its own GitHub key (asks before publishing) |
 | `task aliases` | Copy a paste-in installer that adds the aliases and functions to `~/.zshrc` or `~/.bashrc`, no bootstrap needed ([details](docs/config.md#aliases-without-bootstrap)) |
-| `task kk` | Copy the KodeKloud shell snippet to the clipboard |
+| `task kk [TOPIC=k8s\|terraform\|aws\|ansible\|linux]` | Copy a KodeKloud shell snippet to the clipboard (default: the CKA one) |
 | `task check` | `lint` + `secrets` + `repo` |
 | `task test:remote`, `task test:profiles` | Offline remote-flow tests; container smoke tests for the Linux profiles |
 | `task hooks` | Install the pre-commit hook (secret scan, Markdown formatting) |
@@ -183,7 +183,7 @@ bootstrap/
   modules/            base shell git ssh tailscale containers k8s lang nvim cka
   profiles/           macos (+ Brewfile), rhel, ubuntu, proxmox
 config/               canonical shell, tmux, vim, nvim, herdr, git, ssh and ghostty configs
-kodekloud/            paste-in shell snippet for disposable lab nodes
+kodekloud/            paste-in shell snippets for disposable lab nodes (cka, k8s, terraform, aws, ansible, linux)
 scripts/              remote transport, secret scan, repo checks, tests, git hook
 docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, ssh-tutorial/
 .claude/skills/       agentic spec-driven development skills for AI coding agents
@@ -198,7 +198,7 @@ docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, s
 | [SSH and Tailscale](docs/ssh.md) | Named hosts, config layering, multiplexing, agent-forwarding policy |
 | [Learn SSH (tutorial)](docs/ssh-tutorial/README.md) | Beginner to advanced SSH course built on this repo's real SSH files |
 | [Managed configuration](docs/config.md) | The canonical configs, how they are installed, tmux/Vim/Ghostty notes |
-| [KodeKloud and disposable nodes](docs/kodekloud.md) | The session-only CKA shell snippet |
+| [KodeKloud and disposable nodes](docs/kodekloud.md) | The session-only CKA snippet and the per-topic paste-ins |
 | [Cheatsheets](docs/cheatsheets.md) | Kubernetes, Linux and Terraform lab commands |
 
 ## Contributing

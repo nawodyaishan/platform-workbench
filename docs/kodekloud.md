@@ -10,4 +10,6 @@ It provides:
 - a minimal `VIMINIT` with two-space YAML indentation
 - the current hostname and kubectl context printed, so you know where you are
 
+For more than the exam shell, [kodekloud/](../kodekloud/README.md) has one paste-in per topic (`k8s`, `terraform`, `aws`, `ansible`, `linux`). Each starts with a shared basic Linux block (navigation, systemd, `ip`, and offline `hlp`/`mg`/`mopt`/`mk` man-page helpers) and adds that tool's aliases. Copy one with `task kk TOPIC=terraform` (or `make kk TOPIC=terraform`); they stack. On a VM with internet you can `source <(curl -fsSL …/kodekloud/<topic>/<topic>-shell.sh)` instead, after reading the script.
+
 `k`, its completion and the Vim editor settings behave the same as on the persistent labs, so muscle memory carries over. `$do` and `$now` exist only in this snippet. Don't rely on the snippet in an exam. Always check host, context and namespace before changing resources. See [cheatsheets.md](cheatsheets.md) for the inspect-first command flow.

@@ -5,9 +5,18 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT"
 rc=0
 for path in bootstrap/workbench.sh bootstrap/hosts.conf config/shell/aliases.sh config/tmux/tmux.conf \
-            config/vim/vimrc config/ssh/workbench.conf kodekloud/cka-shell.sh docs/new-machine.md; do
+            config/vim/vimrc config/ssh/workbench.conf kodekloud/cka-shell.sh docs/new-machine.md \
+            kodekloud/k8s/k8s-shell.sh kodekloud/terraform/terraform-shell.sh kodekloud/aws/aws-shell.sh \
+            kodekloud/ansible/ansible-shell.sh kodekloud/linux/linux-shell.sh; do
   [ -f "$path" ] || { echo "missing file: $path" >&2; rc=1; }
 done
+
+# Paste-in scripts are pasted alone, so each carries its own copy of the basic linux block.
+# Keep the copies byte-identical.
+block_sums=$(for f in kodekloud/*/*-shell.sh; do
+  sed -n '/^# >>> basic linux >>>$/,/^# <<< basic linux <<<$/p' "$f" | cksum
+done | sort -u | wc -l | tr -d ' ')
+[ "$block_sums" = 1 ] || { echo "kodekloud/*/*-shell.sh: the basic linux block differs between scripts (or is missing)" >&2; rc=1; }
 
 # One canonical copy of each config: no stray duplicates elsewhere in the tree.
 dupes=$(git ls-files --cached --others --exclude-standard | grep -E '(^|/)(\.?tmux\.conf|\.?vimrc|aliases\.sh)$' \
