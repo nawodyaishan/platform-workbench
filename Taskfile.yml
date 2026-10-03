@@ -22,6 +22,9 @@ tasks:
           sessions   task main | task ssh HOST=alias | task rhel | task ubuntu | task proxmox
           hosts      task hosts | task ssh:copy-id HOST=alias [KEY=~/.ssh/id_ed25519.pub] | task gh-key HOST=alias
           shell      task aliases   (paste-in installer for the aliases and functions)
+                     task install:aliases   (aliases only, onto this machine; no bootstrap)
+          install    task install:task [-- --distro ubuntu|rhel|proxmox --method binary --dry-run]
+                     task install:ubuntu | install:rhel | install:proxmox [-- --dry-run]
           labs       task kk
           repo       task lint | secrets | repo | check | test:remote | test:profiles | hooks
         flags: --dry-run  --yes  --extras go,node,cka
@@ -110,6 +113,40 @@ tasks:
         else
           "{{.SH}}/aliases-snippet.sh"
         fi
+  install:aliases:
+    desc: Install only the aliases and functions on this machine (marker block; works as root)
+    cmds:
+      - '"{{.SH}}/aliases-snippet.sh" | bash'
+
+  # --- Install flow for Linux hosts --------------------------------------------------
+  # Run these on the host itself. `make install-task` does the same before Task exists.
+  install:task:
+    desc: Install Task on this Linux host (-- --distro ubuntu|rhel|proxmox --method repo|binary --dry-run)
+    cmds: ['"{{.SH}}/install-task.sh" {{.CLI_ARGS}}']
+  install:ubuntu:
+    desc: Task + full ubuntu profile on this host (-- --dry-run first)
+    interactive: true
+    cmds:
+      - |
+        case " {{.CLI_ARGS}} " in *" --dry-run "*) dry=--dry-run ;; *) dry= ;; esac
+        "{{.SH}}/install-task.sh" --distro ubuntu $dry
+        exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile ubuntu {{.CLI_ARGS}}
+  install:rhel:
+    desc: Task + full rhel profile on this host (-- --dry-run first)
+    interactive: true
+    cmds:
+      - |
+        case " {{.CLI_ARGS}} " in *" --dry-run "*) dry=--dry-run ;; *) dry= ;; esac
+        "{{.SH}}/install-task.sh" --distro rhel $dry
+        exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile rhel {{.CLI_ARGS}}
+  install:proxmox:
+    desc: Task + minimal proxmox profile on this host, run as root (-- --dry-run first)
+    interactive: true
+    cmds:
+      - |
+        case " {{.CLI_ARGS}} " in *" --dry-run "*) dry=--dry-run ;; *) dry= ;; esac
+        "{{.SH}}/install-task.sh" --distro proxmox $dry
+        exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile proxmox {{.CLI_ARGS}}
   kk:
     desc: Copy a KodeKloud shell snippet to the Mac clipboard (TOPIC=cka|k8s|terraform|aws|ansible|linux, default cka)
     cmds:

@@ -21,6 +21,24 @@ The remote host never needs a clone of this repository or any Git credential. `s
 
 If the host later needs its own GitHub access, run `task gh-key HOST=ubuntu-lab`. It creates a separate key on the host, shows only the public half, and asks again before publishing it with `gh`. Revoke it independently with `gh ssh-key list` / `gh ssh-key delete <id>`. A read-only deploy key is better when one repository is enough.
 
+## A Linux host with nothing installed (Ubuntu, RHEL, Proxmox)
+
+Log in on the host (root is fine; nothing here calls `sudo` as root), then:
+
+```bash
+# Debian family / Proxmox: apt-get install -y git make curl ca-certificates
+# RHEL family:             dnf install -y git make curl
+git clone https://github.com/nawodyaishan/platform-workbench.git ~/platform-workbench
+cd ~/platform-workbench
+
+make help                              # works before Task exists
+make install-task                      # Task only (Proxmox gets the release binary)
+make install-aliases                   # aliases and functions only
+make install-proxmox ARGS=--dry-run    # Task + full profile; also install-ubuntu / install-rhel
+```
+
+`task install:task`, `task install:aliases` and `task install:<ubuntu|rhel|proxmox>` do the same once Task is installed. Drop `ARGS=--dry-run` to apply.
+
 ## A Linux host running the toolkit itself
 
 Because the repository is public, a host can also clone it over HTTPS with no credentials and run the engine locally:

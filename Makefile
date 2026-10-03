@@ -8,23 +8,27 @@ PROFILE ?=
 KEY ?=
 TOPIC ?=
 ARGS ?=
+DISTRO ?=
+METHOD ?=
 
 # Only pass a variable through when it is set, so `requires:` checks in the Taskfile still fire.
 VARS = $(if $(HOST),HOST=$(HOST)) $(if $(PROFILE),PROFILE=$(PROFILE)) $(if $(KEY),KEY=$(KEY))
 ARGS_SUFFIX = $(if $(ARGS),-- $(ARGS))
 
 .DEFAULT_GOAL := help
-.PHONY: help preflight bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
+.PHONY: help preflight install-task install-aliases install-ubuntu install-rhel install-proxmox bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
         ssh-copy-id gh-key aliases kk lint secrets repo check test-remote test-profiles hooks
 
-help: preflight ## Show workbench commands
+help: ## Show this help (works without Task installed)
 	@echo "platform-workbench (make is a thin wrapper around task)"
-	@echo "  lifecycle  make bootstrap|update|verify [HOST=alias | PROFILE=macos|rhel|ubuntu|proxmox] [ARGS=\"--dry-run\"]"
-	@echo "             make verify-all"
-	@echo "  sessions   make main | make ssh HOST=alias | make rhel | make ubuntu | make proxmox"
-	@echo "  hosts      make hosts | make ssh-copy-id HOST=alias [KEY=~/.ssh/id_ed25519.pub] | make gh-key HOST=alias"
-	@echo "  shell      make aliases | make kk [TOPIC=cka|k8s|terraform|aws|ansible|linux]"
-	@echo "  repo       make lint | secrets | repo | check | test-remote | test-profiles | hooks"
+	@echo "Usage: make <target> [HOST=alias] [PROFILE=name] [TOPIC=name] [ARGS=\"--dry-run\"]"
+	@echo ""
+	@awk 'BEGIN{FS=":.*## "} /^[a-zA-Z0-9_ -]+:.*## /{printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "Fresh Linux host (Ubuntu, RHEL, Proxmox), logged in as root or a sudo user:"
+	@echo "  make install-task            # installs Task, no sudo needed as root"
+	@echo "  make install-aliases         # aliases only"
+	@echo "  make install-proxmox ARGS=--dry-run   # Task + full profile; drop ARGS to apply"
 	@echo "Everything else: $(TASK) --list"
 
 preflight:
@@ -71,3 +75,16 @@ test-profiles: preflight ## Container smoke tests (ARGS="rhel ubuntu proxmox")
 	@$(TASK) test:profiles $(ARGS_SUFFIX)
 hooks: preflight ## Install the pre-commit hook
 	@$(TASK) hooks
+
+# Install flow for Linux hosts. install-task runs the script directly because Task does not
+# exist yet; as root it never calls sudo. Pass the Task flags with ARGS="--dry-run".
+install-task: ## Install Task on this Linux host (auto-detects Ubuntu/RHEL/Proxmox)
+	@./scripts/install-task.sh $(if $(DISTRO),--distro $(DISTRO)) $(if $(METHOD),--method $(METHOD))
+install-aliases: ## Install only the aliases and functions into this user's rc file
+	@./scripts/aliases-snippet.sh | bash
+install-ubuntu: install-task ## Task + ubuntu profile on this host
+	@$(TASK) install:ubuntu $(ARGS_SUFFIX)
+install-rhel: install-task ## Task + rhel profile on this host
+	@$(TASK) install:rhel $(ARGS_SUFFIX)
+install-proxmox: install-task ## Task + minimal proxmox profile on this host (run as root)
+	@$(TASK) install:proxmox $(ARGS_SUFFIX)
