@@ -2,12 +2,12 @@
 
 **Level:** intermediate · **Assumes:** [chapters 1–2](01-first-connection.md) · [Back to contents](README.md)
 
-Typing `ssh -p 2222 -i ~/.ssh/lab_key alice@192.0.2.20` gets old fast, and it spreads an address through your shell history and scripts. `~/.ssh/config` lets you say `ssh ubuntu-lab` instead. This chapter explains how the file is read, because a few surprising rules decide which setting wins.
+Typing `ssh -p 2222 -i ~/.ssh/lab_key alice@192.0.2.20` gets old fast, and it spreads an address through your shell history and scripts. `~/.ssh/config` lets you say `ssh dev-01` instead. This chapter explains how the file is read, because a few surprising rules decide which setting wins.
 
 ## A first `Host` block
 
 ```sshconfig
-Host ubuntu-lab
+Host dev-01
     HostName 192.0.2.20
     User alice
     IdentityFile ~/.ssh/id_ed25519
@@ -15,7 +15,7 @@ Host ubuntu-lab
 
 - `Host` lists one or more **patterns**. The block applies when the name you typed matches one of them. `*` and `?` work as wildcards.
 - `HostName` is the real address or DNS name to connect to.
-- Every command that uses SSH now understands the alias: `ssh ubuntu-lab`, `scp file ubuntu-lab:/tmp/`, `rsync -a dir/ ubuntu-lab:dir/`, `git clone ubuntu-lab:repo.git`.
+- Every command that uses SSH now understands the alias: `ssh dev-01`, `scp file dev-01:/tmp/`, `rsync -a dir/ dev-01:dir/`, `git clone dev-01:repo.git`.
 
 ## Rule 1: the first value wins
 
@@ -24,7 +24,7 @@ This is the rule that confuses everyone. SSH reads the config from top to bottom
 So specific blocks go first and `Host *` defaults go last. The repo's shared file, [config/ssh/workbench.conf](../../config/ssh/workbench.conf), is built exactly that way:
 
 ```sshconfig
-Host rhel-lab ubuntu-lab proxmox
+Host rhel-rhcsa01 dev-01 proxmox
     HostName %h
     ServerAliveInterval 30
     ServerAliveCountMax 4
@@ -39,22 +39,22 @@ Host *
     ServerAliveCountMax 3
 ```
 
-`ubuntu-lab` matches **both** blocks. It gets `ServerAliveInterval 30` from the first block. The `60` in `Host *` is ignored for it, because a value was already set. It still gets `ForwardAgent no` from `Host *`, because nothing earlier set that option. Any other host, such as `github.com`, matches only `Host *` and gets `60`.
+`dev-01` matches **both** blocks. It gets `ServerAliveInterval 30` from the first block. The `60` in `Host *` is ignored for it, because a value was already set. It still gets `ForwardAgent no` from `Host *`, because nothing earlier set that option. Any other host, such as `github.com`, matches only `Host *` and gets `60`.
 
 ## Rule 2: see what SSH will actually do with `ssh -G`
 
 Don't reason about precedence in your head. Ask SSH. `ssh -G` prints the final, merged configuration for a host **without connecting**:
 
 ```bash
-mac$ ssh -G ubuntu-lab | grep -E '^(hostname|user|port|serveraliveinterval|forwardagent|controlpath) '
+mac$ ssh -G dev-01 | grep -E '^(hostname|user|port|serveraliveinterval|forwardagent|controlpath) '
 ```
 
 `-F <file>` makes SSH read **only** that file instead of `~/.ssh/config`, which is a safe way to explore a config you haven't installed. Try it on the repo's file right now:
 
 ```bash
 mac$ cd platform-workbench
-mac$ ssh -G -F config/ssh/workbench.conf ubuntu-lab | grep -E '^(hostname|serveraliveinterval|forwardagent|stricthostkeychecking) '
-hostname ubuntu-lab
+mac$ ssh -G -F config/ssh/workbench.conf dev-01 | grep -E '^(hostname|serveraliveinterval|forwardagent|stricthostkeychecking) '
+hostname dev-01
 stricthostkeychecking accept-new
 serveraliveinterval 30
 forwardagent no
@@ -81,7 +81,7 @@ Some options accept tokens that SSH expands per connection:
 | `%p` | The port |
 | `%C` | A hash of the connection details (local host, remote host, port, user): short and unique |
 
-`HostName %h` in the repo's config means "connect to the alias itself as a DNS name". With Tailscale MagicDNS, `ubuntu-lab` resolves to the machine of that name on your tailnet, so **no address appears anywhere in the file**. `%C` is used for socket paths in [chapter 4](04-sessions.md).
+`HostName %h` in the repo's config means "connect to the alias itself as a DNS name". With Tailscale MagicDNS, `dev-01` resolves to the machine of that name on your tailnet, so **no address appears anywhere in the file**. `%C` is used for socket paths in [chapter 4](04-sessions.md).
 
 ## Rule 3: `Include` lets you layer files
 
@@ -122,7 +122,7 @@ Host proxmox
     User root
 
 # For first contact before Tailscale is available:
-# Host rhel-lab
+# Host rhel-rhcsa01
 #     User myuser
 #     HostName 192.0.2.10
 ```
@@ -134,7 +134,7 @@ Bootstrap copies the example once with mode `600`, and [.gitignore](../../.gitig
 A brand-new VM isn't on the tailnet yet, so the alias can't resolve. Temporarily add an address in the **local** file:
 
 ```sshconfig
-Host ubuntu-lab
+Host dev-01
     User alice
     HostName 192.0.2.20
 ```
@@ -146,8 +146,8 @@ Because `10-` is read before `50-`, this `HostName` beats `HostName %h`. Once th
 The repo keeps a registry of managed hosts in [bootstrap/hosts.conf](../../bootstrap/hosts.conf):
 
 ```text
-rhel-lab    rhel
-ubuntu-lab  ubuntu
+rhel-rhcsa01    rhel
+dev-01  ubuntu
 proxmox     proxmox
 ```
 
@@ -164,9 +164,9 @@ Build a throwaway layered config in `/tmp` and use `ssh -G` to predict and confi
 ```bash
 mac$ mkdir -p /tmp/sshplay/config.d
 mac$ printf 'Include /tmp/sshplay/config.d/*.conf\n' > /tmp/sshplay/config
-mac$ printf 'Host ubuntu-lab\n    User alice\n    HostName 192.0.2.20\n' > /tmp/sshplay/config.d/10-local.conf
+mac$ printf 'Host dev-01\n    User alice\n    HostName 192.0.2.20\n' > /tmp/sshplay/config.d/10-local.conf
 mac$ cp config/ssh/workbench.conf /tmp/sshplay/config.d/50-workbench.conf
-mac$ ssh -G -F /tmp/sshplay/config ubuntu-lab | grep -E '^(user|hostname|serveraliveinterval) '
+mac$ ssh -G -F /tmp/sshplay/config dev-01 | grep -E '^(user|hostname|serveraliveinterval) '
 ```
 
 1. Before running the last line, predict the three values. Were you right?

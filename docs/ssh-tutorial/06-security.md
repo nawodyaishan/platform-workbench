@@ -32,11 +32,11 @@ if grep -Ei '^[[:space:]]*(ForwardAgent[[:space:]]+yes|StrictHostKeyChecking[[:s
   bad "unsafe SSH setting present"
 ```
 
-When you really need it once, use `ssh -A ubuntu-lab` for that session on a host you trust, and log out afterwards. For lasting access, give the host its own key (next section). To hop through a host, use `ProxyJump` instead ([chapter 7](07-tunnels-and-jumps.md)), which never exposes your agent to the middle host.
+When you really need it once, use `ssh -A dev-01` for that session on a host you trust, and log out afterwards. For lasting access, give the host its own key (next section). To hop through a host, use `ProxyJump` instead ([chapter 7](07-tunnels-and-jumps.md)), which never exposes your agent to the middle host.
 
 ## One key per host and purpose
 
-If a lab VM needs to pull from GitHub, give it **its own** key. If the VM is compromised, you revoke one key, and your laptop key is never involved. `task gh-key HOST=ubuntu-lab` automates this. The steps in [scripts/remote.sh](../../scripts/remote.sh):
+If a lab VM needs to pull from GitHub, give it **its own** key. If the VM is compromised, you revoke one key, and your laptop key is never involved. `task gh-key HOST=dev-01` automates this. The steps in [scripts/remote.sh](../../scripts/remote.sh):
 
 1. **Ask first.** Nothing happens without a `y`.
 2. **Create the key on the host**, so the private half is born there and never travels:
@@ -50,7 +50,7 @@ If a lab VM needs to pull from GitHub, give it **its own** key. If the VM is com
    ```sshconfig
    # >>> platform-workbench github >>>
    Host github.com
-       IdentityFile ~/.ssh/id_ed25519_github_ubuntu-lab
+       IdentityFile ~/.ssh/id_ed25519_github_dev-01
        IdentitiesOnly yes
        ForwardAgent no
    # <<< platform-workbench github <<<
@@ -62,7 +62,7 @@ If a lab VM needs to pull from GitHub, give it **its own** key. If the VM is com
 Test it from the host. GitHub's SSH user is always `git`, and `-l git` is the same as writing `git` before the `@`:
 
 ```bash
-ubuntu-lab$ ssh -T -l git github.com
+dev-01$ ssh -T -l git github.com
 ```
 
 Revoke it any time from the Mac with `gh ssh-key list` and `gh ssh-key delete <id>`. When the host needs only one repository, a **read-only deploy key** on that repository is narrower still.
@@ -74,7 +74,7 @@ Recap from [chapter 1](01-first-connection.md): `accept-new` learns new hosts bu
 - `StrictHostKeyChecking no` plus `UserKnownHostsFile /dev/null` is common in copy-pasted scripts. It disables the only protection against an impostor server.
 - Deleting `~/.ssh/known_hosts` to make a warning go away throws away every host you've verified.
 
-When a key has genuinely changed (for example after a reinstall), remove just that entry and reconnect: `ssh-keygen -R ubuntu-lab`.
+When a key has genuinely changed (for example after a reinstall), remove just that entry and reconnect: `ssh-keygen -R dev-01`.
 
 ## Harden the server (`sshd`)
 
@@ -87,7 +87,7 @@ Before touching `sshd`, open **two** SSH sessions to the host, or have the VM co
 ### 2. Prove key login first
 
 ```bash
-mac$ ssh -o ControlPath=none -o PasswordAuthentication=no -o BatchMode=yes ubuntu-lab true && echo ok
+mac$ ssh -o ControlPath=none -o PasswordAuthentication=no -o BatchMode=yes dev-01 true && echo ok
 ```
 
 `ControlPath=none` bypasses any running multiplexing master ([chapter 4](04-sessions.md)). Without it, a master that is already authenticated would make the test pass without checking anything.
@@ -97,7 +97,7 @@ mac$ ssh -o ControlPath=none -o PasswordAuthentication=no -o BatchMode=yes ubunt
 Modern Ubuntu and RHEL 9 read `/etc/ssh/sshd_config.d/*.conf` near the top of `sshd_config`. Like the client, **`sshd` keeps the first value it sees**. Drop-ins are read in name order, and some images ship `50-cloud-init.conf` with `PasswordAuthentication yes`, so use a lower number:
 
 ```bash
-ubuntu-lab$ sudo tee /etc/ssh/sshd_config.d/10-hardening.conf >/dev/null <<'EOF'
+dev-01$ sudo tee /etc/ssh/sshd_config.d/10-hardening.conf >/dev/null <<'EOF'
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin prohibit-password
@@ -109,12 +109,12 @@ EOF
 ### 4. Check, then reload
 
 ```bash
-ubuntu-lab$ sudo sshd -t                                                  # syntax check; silent means OK
-ubuntu-lab$ sudo sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin) '
-ubuntu-lab$ sudo systemctl reload ssh        # "sshd" on RHEL; the repo's _sshd_unit picks the right one
+dev-01$ sudo sshd -t                                                  # syntax check; silent means OK
+dev-01$ sudo sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin) '
+dev-01$ sudo systemctl reload ssh        # "sshd" on RHEL; the repo's _sshd_unit picks the right one
 ```
 
-`sshd -T` prints the **effective** server config, the server-side twin of `ssh -G`. Now test a **new** connection from the Mac (`ssh -o ControlPath=none ubuntu-lab`) while your lifeline session is still open.
+`sshd -T` prints the **effective** server config, the server-side twin of `ssh -G`. Now test a **new** connection from the Mac (`ssh -o ControlPath=none dev-01`) while your lifeline session is still open.
 
 > [!NOTE]
 > Recent Ubuntu releases start `sshd` through socket activation (`ssh.socket`). Authentication settings apply after a reload or restart of `ssh`, but changing `Port` or `ListenAddress` also needs the socket unit updated. Keep the default port and use Tailscale instead of hiding the port.
@@ -138,9 +138,9 @@ A public repo about SSH has to be careful about what it publishes:
 
 ## Exercises
 
-1. Run `ssh -G ubuntu-lab | grep -E '^(forwardagent|stricthostkeychecking) '` and explain each value from the files in [chapter 3](03-client-config.md).
+1. Run `ssh -G dev-01 | grep -E '^(forwardagent|stricthostkeychecking) '` and explain each value from the files in [chapter 3](03-client-config.md).
 2. On a lab VM, with a lifeline session open, apply the hardening drop-in, verify with `sshd -T`, and test a new login.
-3. From the Mac, confirm the password fallback is gone: `ssh -o ControlPath=none -o PubkeyAuthentication=no ubuntu-lab` should now be refused with `Permission denied`.
+3. From the Mac, confirm the password fallback is gone: `ssh -o ControlPath=none -o PubkeyAuthentication=no dev-01` should now be refused with `Permission denied`.
 4. Run `task secrets` and read the list of patterns in `scripts/check-secrets.sh`.
 
 **Next:** [7. Tunnels and jump hosts](07-tunnels-and-jumps.md)

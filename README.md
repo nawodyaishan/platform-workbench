@@ -47,7 +47,7 @@ A homelab tends to drift. Every VM ends up with its own `.bashrc`, the tmux conf
 - **Profiles instead of snowflakes.** Each machine gets exactly one profile: `macos`, `rhel`, `ubuntu` or `proxmox`. A profile is a list of modules and packages. That's all.
 - **Three verbs.** `bootstrap` installs and wires things up, `update` upgrades only what the profile manages, and `verify` is a read-only health check that exits non-zero on drift.
 - **Driven from the Mac.** A fresh Linux host can be bootstrapped over SSH *before* this repository is cloned on it. It needs no Git credentials and no forwarded keys.
-- **Reached by name.** `ssh rhel-lab`, `task ubuntu`. Tailscale MagicDNS handles reachability, OpenSSH handles auth, and tmux keeps the session alive.
+- **Reached by name.** `ssh rhel-rhcsa01`, `task ubuntu`. Tailscale MagicDNS handles reachability, OpenSSH handles auth, and tmux keeps the session alive.
 
 ## Quick start
 
@@ -65,10 +65,10 @@ task verify                      # read-only health check
 Then bring a lab host up by name. See [docs/new-machine.md](docs/new-machine.md) for the first-contact steps.
 
 ```bash
-task ssh:copy-id HOST=ubuntu-lab                 # install your public key, nothing else
-task bootstrap HOST=ubuntu-lab -- --dry-run      # review the remote plan
-task bootstrap HOST=ubuntu-lab                   # apply it over SSH
-task ubuntu                                      # SSH in and attach tmux "main"
+task ssh:copy-id HOST=dev-01                 # install your public key, nothing else
+task bootstrap HOST=dev-01 -- --dry-run      # review the remote plan
+task bootstrap HOST=dev-01                   # apply it over SSH
+task ubuntu                                  # SSH in and attach tmux "main"
 ```
 
 > [!TIP]
@@ -79,7 +79,7 @@ task ubuntu                                      # SSH in and attach tmux "main"
 ```mermaid
 flowchart LR
     subgraph mac["macOS workstation"]
-        task["task bootstrap HOST=ubuntu-lab"] --> remote["scripts/remote.sh"]
+        task["task bootstrap HOST=dev-01"] --> remote["scripts/remote.sh"]
         remote --> scan["task secrets<br/>(scan before sending)"]
         scan --> tar["git ls-files<br/>bootstrap/ config/ kodekloud/"]
     end
@@ -99,7 +99,7 @@ flowchart LR
 Every run ends with the same summary, so drift is easy to spot:
 
 ```text
-platform-workbench verify  profile=ubuntu  host=ubuntu-lab (Ubuntu 24.04 LTS)
+platform-workbench verify  profile=ubuntu  host=dev-01 (Ubuntu 24.04 LTS)
 
 ==> shell wiring (verify)
   ok   marker block current in /home/alice/.bashrc
@@ -121,8 +121,8 @@ platform-workbench verify  profile=ubuntu  host=ubuntu-lab (Ubuntu 24.04 LTS)
 | Machine | Alias | Profile | What it gets |
 |---|---|---|---|
 | macOS workstation | local | `macos` | Brewfile, shell, Git, SSH client config, Tailscale, OrbStack check, Kubernetes CLIs, Go, minimal Neovim (Go/TS/YAML) |
-| RHEL 9 family VM (RHEL, Alma, Rocky) | `rhel-lab` | `rhel` | Shell, Git, sshd, Tailscale, podman, kubectl/kubeadm, CKA tools, SELinux and admin utilities |
-| Ubuntu LTS VM | `ubuntu-lab` | `ubuntu` | Shell, Git, sshd, Tailscale, Docker CE, kubectl/kubeadm, Helm, k9s, CKA tools |
+| RHCSA VM, RHEL family (RHEL, Alma, Rocky) | `rhel-rhcsa01` | `rhel` | Shell, Git, sshd, Tailscale, podman, kubectl/kubeadm, CKA tools, SELinux and admin utilities |
+| Development VM, Ubuntu LTS | `dev-01` | `ubuntu` | Shell, Git, sshd, Tailscale, Docker CE, kubectl/kubeadm, Helm, k9s, CKA tools |
 | Proxmox VE host | `proxmox` | `proxmox` | Deliberately minimal: shell config, sshd, Tailscale, host utilities. Nothing else |
 | KodeKloud / disposable node | none | none | A paste-in, session-only [shell snippet](docs/kodekloud.md). Nothing installed |
 
@@ -150,7 +150,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 
 Lifecycle flags go after `--`: `--dry-run`, `--yes`, `--extras go,node,cka`.
 
-Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with underscores for colons: `make check`, `make test-remote`, `make bootstrap HOST=ubuntu-lab ARGS="--dry-run"`. Run `make` on its own for the summary.
+Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with underscores for colons: `make check`, `make test-remote`, `make bootstrap HOST=dev-01 ARGS="--dry-run"`. Run `make` on its own for the summary.
 
 ## Safety model
 

@@ -78,13 +78,13 @@ tasks:
     requires: {vars: [HOST]}
     cmds: ['ssh -t "{{.HOST}}" ''command -v tmux >/dev/null && exec tmux new-session -A -s main || exec "${SHELL:-/bin/bash}" -l''']
   rhel:
-    desc: Session on rhel-lab
+    desc: Session on rhel-rhcsa01
     interactive: true
-    cmds: [{task: ssh, vars: {HOST: rhel-lab}}]
+    cmds: [{task: ssh, vars: {HOST: rhel-rhcsa01}}]
   ubuntu:
-    desc: Session on ubuntu-lab
+    desc: Session on dev-01
     interactive: true
-    cmds: [{task: ssh, vars: {HOST: ubuntu-lab}}]
+    cmds: [{task: ssh, vars: {HOST: dev-01}}]
   proxmox:
     desc: Session on proxmox
     interactive: true

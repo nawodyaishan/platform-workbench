@@ -28,7 +28,7 @@ ControlPath ~/.ssh/cm/%C    # where the master's control socket lives
 ControlPersist 10m          # keep the master in the background 10 min after the last session
 ```
 
-- The first `ssh ubuntu-lab` authenticates and opens a socket in `~/.ssh/cm/`.
+- The first `ssh dev-01` authenticates and opens a socket in `~/.ssh/cm/`.
 - Later `ssh`, `scp` or `rsync` calls to the same host within ten minutes reuse it and start almost instantly, with no new authentication.
 - `%C` gives each user, host and port combination its own short socket name.
 
@@ -41,8 +41,8 @@ The socket directory must be private, since anyone who can use your socket can u
 Control the master directly:
 
 ```bash
-mac$ ssh -O check ubuntu-lab     # is a master running?
-mac$ ssh -O exit ubuntu-lab      # close it now
+mac$ ssh -O check dev-01     # is a master running?
+mac$ ssh -O exit dev-01      # close it now
 ```
 
 Things to know:
@@ -53,8 +53,8 @@ Things to know:
 Feel the difference:
 
 ```bash
-mac$ ssh -O exit ubuntu-lab 2>/dev/null; time ssh ubuntu-lab true   # full handshake
-mac$ time ssh ubuntu-lab true                                       # multiplexed
+mac$ ssh -O exit dev-01 2>/dev/null; time ssh dev-01 true   # full handshake
+mac$ time ssh dev-01 true                                   # multiplexed
 ```
 
 ## tmux: sessions that survive disconnects
@@ -83,8 +83,8 @@ Read it piece by piece:
 `sshd` sets environment variables in every session:
 
 ```bash
-ubuntu-lab$ echo "$SSH_CONNECTION"   # client-ip client-port server-ip server-port
-ubuntu-lab$ echo "$SSH_TTY"          # set only when a terminal was allocated
+dev-01$ echo "$SSH_CONNECTION"   # client-ip client-port server-ip server-port
+dev-01$ echo "$SSH_TTY"          # set only when a terminal was allocated
 ```
 
 [config/tmux/tmux.conf](../../config/tmux/tmux.conf) uses `SSH_CONNECTION` to colour the status bar differently on remote hosts, so a tmux inside another tmux is easy to spot:
@@ -106,8 +106,8 @@ Two smaller things make remote work feel local:
 
 ## Exercises
 
-1. Run `ssh ubuntu-lab true`, then `ls -l ~/.ssh/cm/`. You'll see the master's socket. Run `ssh -O check ubuntu-lab`, then `ssh -O exit ubuntu-lab`.
-2. Time a cold and a warm `ssh ubuntu-lab true` as shown above.
+1. Run `ssh dev-01 true`, then `ls -l ~/.ssh/cm/`. You'll see the master's socket. Run `ssh -O check dev-01`, then `ssh -O exit dev-01`.
+2. Time a cold and a warm `ssh dev-01 true` as shown above.
 3. Run `task ubuntu`, start `top`, disconnect with `Ctrl-b d`, then run `task ubuntu` again. `top` is still running.
 4. Inside that session, run `echo "$SSH_CONNECTION"` and check the status bar colour. Compare with a local `task main`.
 

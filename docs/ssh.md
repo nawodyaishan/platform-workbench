@@ -1,6 +1,6 @@
 # SSH and Tailscale
 
-Tailscale provides private reachability, OpenSSH handles authentication, and tmux keeps the session alive. You always connect by name (`ssh rhel-lab`, `ssh ubuntu-lab`, `ssh proxmox`) and never by address.
+Tailscale provides private reachability, OpenSSH handles authentication, and tmux keeps the session alive. You always connect by name (`ssh rhel-rhcsa01`, `ssh dev-01`, `ssh proxmox`) and never by address.
 
 New to SSH, or want the reasoning behind these defaults? Work through the [SSH tutorial](ssh-tutorial/README.md), which teaches SSH from a first login to hardened automation using this repository's files as the examples.
 
@@ -30,9 +30,9 @@ It also sets `ForwardAgent no` for everything. Never copy the Mac private key to
 
 ```bash
 task hosts                 # registry, resolved user@hostname, reachability
-ssh -G rhel-lab            # effective settings for one alias
-task rhel                  # SSH + attach/create tmux "main" (same as: task ssh HOST=rhel-lab)
-ssh -O exit rhel-lab       # close a multiplexed master connection
+ssh -G rhel-rhcsa01        # effective settings for one alias
+task rhel                  # SSH + attach/create tmux "main" (same as: task ssh HOST=rhel-rhcsa01)
+ssh -O exit rhel-rhcsa01   # close a multiplexed master connection
 ```
 
 Remote sessions use the stock tmux `Ctrl-b` prefix, so a nested session needs `Ctrl-b Ctrl-b`. The status bar accent is mauve locally and green over SSH, so you can tell the layers apart.

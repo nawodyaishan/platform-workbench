@@ -33,7 +33,7 @@ for host in $hosts; do
   PATH="$tmp:$PATH" task ssh HOST="$host"
   grep -q "^-t $host .*tmux new-session -A -s main" "$WB_TEST_LOG"
 done
-for short in rhel:rhel-lab ubuntu:ubuntu-lab proxmox:proxmox; do
+for short in rhel:rhel-rhcsa01 ubuntu:dev-01 proxmox:proxmox; do
   PATH="$tmp:$PATH" task "${short%%:*}"
   grep -q "^-t ${short#*:} .*tmux new-session -A -s main" "$WB_TEST_LOG"
 done
@@ -43,10 +43,10 @@ done
 if PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap not-a-host --dry-run 2>/dev/null; then
   echo 'unregistered host accepted' >&2; exit 1
 fi
-if PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-lab --profile ubuntu 2>/dev/null; then
+if PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-rhcsa01 --profile ubuntu 2>/dev/null; then
   echo '--profile override accepted' >&2; exit 1
 fi
-plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-lab --dry-run)
+plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-rhcsa01 --dry-run)
 grep -q 'modules: base shell git ssh' <<< "$plan"
 plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap proxmox --dry-run)
 grep -q 'modules: base shell ssh tailscale$' <<< "$plan"

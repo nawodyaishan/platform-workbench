@@ -30,8 +30,8 @@ _sshd_unit() { if systemctl list-unit-files 2>/dev/null | grep -q '^sshd\.servic
 The service has a different name on different distributions, `sshd` on RHEL and `ssh` on Ubuntu, so the module detects it rather than guessing. Check yours:
 
 ```bash
-ubuntu-lab$ systemctl status ssh      # Ubuntu / Debian / Proxmox
-rhel-lab$   systemctl status sshd     # RHEL / Alma / Rocky
+dev-01$       systemctl status ssh    # Ubuntu / Debian / Proxmox
+rhel-rhcsa01$ systemctl status sshd   # RHEL / Alma / Rocky
 ```
 
 ## Connect
@@ -47,7 +47,7 @@ mac$ ssh alice@192.0.2.20
 Leave with `exit` or `Ctrl-D`.
 
 > [!NOTE]
-> This repository never puts real addresses in commands or files. You will replace `alice@192.0.2.20` with a short name such as `ubuntu-lab` in [chapter 3](03-client-config.md).
+> This repository never puts real addresses in commands or files. You will replace `alice@192.0.2.20` with a short name such as `dev-01` in [chapter 3](03-client-config.md).
 
 ## Host keys and `known_hosts`
 
@@ -64,7 +64,7 @@ Every server has a **host key pair**. The client has never seen this one, so it 
 To really verify the fingerprint, read it on the server through a channel you already trust, such as the VM console, and compare it with the prompt:
 
 ```bash
-ubuntu-lab$ ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+dev-01$ ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 ```
 
 ### How this repo handles it
@@ -119,7 +119,7 @@ The `task ssh` command in [Taskfile.yml](../../Taskfile.yml) uses `ssh -t` becau
 
 SSH needs to *reach* the host before it can authenticate. This repo splits the two jobs:
 
-- **Tailscale** provides private reachability and names (MagicDNS), so `ubuntu-lab` resolves from anywhere on your tailnet without opening port 22 to the internet. See [bootstrap/modules/tailscale.sh](../../bootstrap/modules/tailscale.sh).
+- **Tailscale** provides private reachability and names (MagicDNS), so `dev-01` resolves from anywhere on your tailnet without opening port 22 to the internet. See [bootstrap/modules/tailscale.sh](../../bootstrap/modules/tailscale.sh).
 - **OpenSSH** does authentication and the session itself.
 
 Before a new host has joined the tailnet, you reach it by address. [docs/new-machine.md](../new-machine.md) shows that temporary step.

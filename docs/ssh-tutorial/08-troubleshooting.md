@@ -8,18 +8,18 @@ When SSH fails, work from the outside in: **name → network → server → auth
 
 ```bash
 # 1. What will SSH actually do? (no connection)
-mac$ ssh -G ubuntu-lab | grep -E '^(hostname|user|port|identityfile|proxyjump|controlpath) '
+mac$ ssh -G dev-01 | grep -E '^(hostname|user|port|identityfile|proxyjump|controlpath) '
 
 # 2. Does the name resolve, and is the host on the tailnet?
-mac$ tailscale status | grep ubuntu-lab
+mac$ tailscale status | grep dev-01
 mac$ task hosts                                  # registry, resolved user@hostname, reachability
 
 # 3. Watch the conversation
-mac$ ssh -v ubuntu-lab true                      # -vv / -vvv for more detail
+mac$ ssh -v dev-01 true                      # -vv / -vvv for more detail
 
 # 4. Ask the server (from the console or a working session)
-ubuntu-lab$ sudo journalctl -u ssh -n 50         # "-u sshd" on RHEL
-ubuntu-lab$ sudo sshd -T | less                  # effective server config
+dev-01$ sudo journalctl -u ssh -n 50         # "-u sshd" on RHEL
+dev-01$ sudo sshd -T | less                  # effective server config
 ```
 
 In `ssh -v` output, look for:
@@ -34,16 +34,16 @@ In `ssh -v` output, look for:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `Could not resolve hostname ubuntu-lab` | Host not on the tailnet yet, or MagicDNS is off | `tailscale status`. Until the host joins, add a temporary `HostName` in `10-hosts.local.conf` ([chapter 3](03-client-config.md)) |
-| `Connection timed out` | Host down, or a firewall is blocking it | Check the VM is running and `tailscale ping ubuntu-lab`. On RHEL, `sudo firewall-cmd --list-services` should include `ssh` |
+| `Could not resolve hostname dev-01` | Host not on the tailnet yet, or MagicDNS is off | `tailscale status`. Until the host joins, add a temporary `HostName` in `10-hosts.local.conf` ([chapter 3](03-client-config.md)) |
+| `Connection timed out` | Host down, or a firewall is blocking it | Check the VM is running and `tailscale ping dev-01`. On RHEL, `sudo firewall-cmd --list-services` should include `ssh` |
 | `Connection refused` | Reachable, but nothing listening on 22 | `systemctl status ssh` (or `sshd`) on the host. `task bootstrap HOST=…` enables it |
 | `Permission denied (publickey)` | Key not in `authorized_keys`, wrong user, or bad permissions | `ssh -v` shows the user and keys offered. Check `User` in `ssh -G`. Run `task ssh:copy-id` again. Check modes ([chapter 2](02-keys.md)) and the server log |
-| `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` | Host reinstalled, or someone in the middle | **Stop and find out which.** If you reinstalled it, compare the new fingerprint on the console, then `ssh-keygen -R ubuntu-lab` |
+| `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` | Host reinstalled, or someone in the middle | **Stop and find out which.** If you reinstalled it, compare the new fingerprint on the console, then `ssh-keygen -R dev-01` |
 | `Host key verification failed` in a script | New host with `BatchMode=yes` and no stored key | Connect once interactively. The repo's `accept-new` also handles this |
 | `Too many authentication failures` | The agent offered many keys before the right one | Set `IdentityFile` plus `IdentitiesOnly yes` for that host |
 | `UNPROTECTED PRIVATE KEY FILE!` | Private key readable by others | `chmod 600 ~/.ssh/id_ed25519` |
-| New sessions hang, old ones are dead | Stale multiplexing master after a network change | `ssh -O exit ubuntu-lab` |
-| Config change has no effect | The running master was opened with the old settings | `ssh -O exit ubuntu-lab`, then reconnect |
+| New sessions hang, old ones are dead | Stale multiplexing master after a network change | `ssh -O exit dev-01` |
+| Config change has no effect | The running master was opened with the old settings | `ssh -O exit dev-01`, then reconnect |
 | Session freezes on a flaky network | Keepalives too slow, or none set | `ServerAliveInterval`/`CountMax` ([chapter 4](04-sessions.md)). Use tmux so nothing is lost |
 | Garbled `vim`/`tmux`, `unknown terminal type` | Remote host lacks your terminal's terminfo | Ghostty's `ssh-terminfo` handles it. Otherwise `TERM=xterm-256color ssh …` |
 | `open terminal failed: not a terminal` | Full-screen program run without a TTY | Add `-t` |
@@ -54,41 +54,41 @@ In `ssh -v` output, look for:
 
 ```bash
 # Connect and run
-ssh ubuntu-lab                               # shell via alias
-ssh ubuntu-lab 'uptime'                      # one command; exit code is returned
-ssh -t ubuntu-lab htop                       # full-screen program needs a TTY
-task ubuntu                                  # SSH + attach/create tmux "main"
+ssh dev-01                               # shell via alias
+ssh dev-01 'uptime'                      # one command; exit code is returned
+ssh -t dev-01 htop                       # full-screen program needs a TTY
+task ubuntu                              # SSH + attach/create tmux "main"
 
 # Keys
 ssh-keygen -t ed25519 -C "alice@example.com" # new key (set a passphrase)
 ssh-keygen -lf ~/.ssh/id_ed25519.pub         # fingerprint
-ssh-copy-id -i ~/.ssh/id_ed25519.pub ubuntu-lab   # or: task ssh:copy-id HOST=ubuntu-lab
+ssh-copy-id -i ~/.ssh/id_ed25519.pub dev-01  # or: task ssh:copy-id HOST=dev-01
 ssh-add -l                                   # keys in the agent
-ssh-keygen -R ubuntu-lab                     # forget a host's stored key
+ssh-keygen -R dev-01                         # forget a host's stored key
 
 # Config
-ssh -G ubuntu-lab                            # effective client config, no connection
-ssh -G -F config/ssh/workbench.conf rhel-lab # evaluate one file in isolation
+ssh -G dev-01                            # effective client config, no connection
+ssh -G -F config/ssh/workbench.conf rhel-rhcsa01 # evaluate one file in isolation
 sudo sshd -t && sudo sshd -T                 # server: syntax check, effective config
 
 # Multiplexing
-ssh -O check ubuntu-lab                      # master running?
-ssh -O exit ubuntu-lab                       # close master (fixes most "stuck" issues)
+ssh -O check dev-01                      # master running?
+ssh -O exit dev-01                       # close master (fixes most "stuck" issues)
 
 # Transfer
-scp file ubuntu-lab:/tmp/
-rsync -av dir/ ubuntu-lab:dir/
-tar -czf - dir | ssh ubuntu-lab 'tar -xzf - -C /tmp'
+scp file dev-01:/tmp/
+rsync -av dir/ dev-01:dir/
+tar -czf - dir | ssh dev-01 'tar -xzf - -C /tmp'
 
 # Tunnels
-ssh -N -L 8080:localhost:80 ubuntu-lab       # remote port 80 -> local 8080
-ssh -N -R 9000:localhost:3000 ubuntu-lab     # local 3000 -> remote 9000
-ssh -N -D 1080 ubuntu-lab                    # SOCKS proxy
-ssh -J proxmox alice@192.0.2.40              # jump through a host
+ssh -N -L 8080:localhost:80 dev-01       # remote port 80 -> local 8080
+ssh -N -R 9000:localhost:3000 dev-01     # local 3000 -> remote 9000
+ssh -N -D 1080 dev-01                    # SOCKS proxy
+ssh -J proxmox alice@192.0.2.40          # jump through a host
 
 # Debug
-ssh -v ubuntu-lab true
-ssh -o BatchMode=yes -o ConnectTimeout=5 ubuntu-lab true && echo up
+ssh -v dev-01 true
+ssh -o BatchMode=yes -o ConnectTimeout=5 dev-01 true && echo up
 ```
 
 ## Where to go next

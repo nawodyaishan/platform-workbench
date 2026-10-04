@@ -3,6 +3,6 @@ Host proxmox
     User root
 
 # For first contact before Tailscale is available:
-# Host rhel-lab
+# Host rhel-rhcsa01
 #     User myuser
 #     HostName 192.0.2.10

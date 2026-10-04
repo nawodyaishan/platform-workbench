@@ -8,18 +8,18 @@ The remote host never needs a clone of this repository or any Git credential. `s
 2. **First contact (Mac):** until MagicDNS works, add a temporary address under the alias in the untracked `~/.ssh/config.d/10-hosts.local.conf`:
 
    ```sshconfig
-   Host ubuntu-lab
+   Host dev-01
        HostName 192.0.2.20
        User alice
    ```
 
-3. **Install your public key only:** `task ssh:copy-id HOST=ubuntu-lab` (add `KEY=~/.ssh/id_ed25519.pub` to pick a specific key).
-4. **Review, then apply:** run `task bootstrap HOST=ubuntu-lab -- --dry-run`, read the plan, then run `task bootstrap HOST=ubuntu-lab`. The Mac runs `task secrets` before sending anything.
+3. **Install your public key only:** `task ssh:copy-id HOST=dev-01` (add `KEY=~/.ssh/id_ed25519.pub` to pick a specific key).
+4. **Review, then apply:** run `task bootstrap HOST=dev-01 -- --dry-run`, read the plan, then run `task bootstrap HOST=dev-01`. The Mac runs `task secrets` before sending anything.
 5. **Join the tailnet (on the host):** run `sudo tailscale up` interactively. Auth keys never go in Git. Name the machine after its alias so `verify` can confirm the tailnet hostname.
 6. **Remove the temporary override:** delete the `HostName` line so the alias resolves through MagicDNS.
-7. **Verify:** run `task verify HOST=ubuntu-lab`, then `task ubuntu`. Use `task update HOST=ubuntu-lab` for later managed updates.
+7. **Verify:** run `task verify HOST=dev-01`, then `task ubuntu`. Use `task update HOST=dev-01` for later managed updates.
 
-If the host later needs its own GitHub access, run `task gh-key HOST=ubuntu-lab`. It creates a separate key on the host, shows only the public half, and asks again before publishing it with `gh`. Revoke it independently with `gh ssh-key list` / `gh ssh-key delete <id>`. A read-only deploy key is better when one repository is enough.
+If the host later needs its own GitHub access, run `task gh-key HOST=dev-01`. It creates a separate key on the host, shows only the public half, and asks again before publishing it with `gh`. Revoke it independently with `gh ssh-key list` / `gh ssh-key delete <id>`. A read-only deploy key is better when one repository is enough.
 
 ## A Linux host with nothing installed (Ubuntu, RHEL, Proxmox)
 

@@ -9,8 +9,8 @@
 When you run `ssh host "command"`, **two** shells process the text: your local shell first, then the remote user's shell. The quoting decides which one expands what:
 
 ```bash
-mac$ ssh ubuntu-lab "echo $HOME"    # double quotes: expanded locally  -> /Users/alice
-mac$ ssh ubuntu-lab 'echo $HOME'    # single quotes: expanded remotely -> /home/alice
+mac$ ssh dev-01 "echo $HOME"    # double quotes: expanded locally  -> /Users/alice
+mac$ ssh dev-01 'echo $HOME'    # single quotes: expanded remotely -> /home/alice
 ```
 
 `ssh` joins all its arguments into one string and hands it to the remote shell, so `ssh host ls -l "my file"` does **not** keep your quoting. The remote shell sees `ls -l my file`. When in doubt, pass exactly one single-quoted string.
@@ -64,16 +64,16 @@ payload | ssh "$host" "tar -xzf - -C $REMOTE_DIR.new"
 The same idea handles one-line transfers:
 
 ```bash
-mac$ ssh ubuntu-lab 'cat > /tmp/notes.txt' < notes.txt       # upload
-mac$ ssh ubuntu-lab 'cat /etc/os-release' > os-release.txt   # download
-mac$ ssh ubuntu-lab "cat ~/.ssh/id_ed25519_github_ubuntu-lab.pub"   # read a value into a script
+mac$ ssh dev-01 'cat > /tmp/notes.txt' < notes.txt         # upload
+mac$ ssh dev-01 'cat /etc/os-release' > os-release.txt     # download
+mac$ ssh dev-01 "cat ~/.ssh/id_ed25519_github_dev-01.pub"  # read a value into a script
 ```
 
 For everyday copying, `scp` and `rsync` use the same aliases and config:
 
 ```bash
-mac$ scp ./file.txt ubuntu-lab:/tmp/
-mac$ rsync -av --delete ./site/ ubuntu-lab:site/
+mac$ scp ./file.txt dev-01:/tmp/
+mac$ rsync -av --delete ./site/ dev-01:site/
 ```
 
 ## Run a local script remotely with a heredoc
@@ -145,9 +145,9 @@ Run it with `task test:remote`.
 
 ## Exercises
 
-1. Predict, then run: `ssh ubuntu-lab "echo $USER"` and `ssh ubuntu-lab 'echo $USER'`.
-2. Copy a directory with `tar -czf - dir | ssh ubuntu-lab 'tar -xzf - -C /tmp'`, and compare the time with `scp -r`.
-3. Write a heredoc that prints the remote host name and the first argument: `ssh ubuntu-lab 'bash -s -- hello' <<'EOF'` … `EOF`. Then try it with an unquoted `<<EOF` and a `$HOSTNAME` inside. What changed?
+1. Predict, then run: `ssh dev-01 "echo $USER"` and `ssh dev-01 'echo $USER'`.
+2. Copy a directory with `tar -czf - dir | ssh dev-01 'tar -xzf - -C /tmp'`, and compare the time with `scp -r`.
+3. Write a heredoc that prints the remote host name and the first argument: `ssh dev-01 'bash -s -- hello' <<'EOF'` … `EOF`. Then try it with an unquoted `<<EOF` and a `$HOSTNAME` inside. What changed?
 4. Read `scripts/remote.sh payload | tar -tzf - | head` to see exactly what a remote host would receive.
 
 **Next:** [6. Security and hardening](06-security.md)

@@ -14,13 +14,13 @@ You can start at any level. Each chapter lists what it assumes.
 
 - A Mac or Linux machine with the OpenSSH client (`ssh -V` prints a version).
 - A clone of this repository. Most exercises are **read-only** and use `ssh -G -F config/ssh/workbench.conf …`, which reads a config file without connecting anywhere or touching your own `~/.ssh`.
-- For the hands-on parts, **one Linux VM you control**. The examples call it `ubuntu-lab`, with user `alice` at `192.0.2.20`. Substitute your own values. No VM yet? On a Mac, turn on *System Settings → General → Sharing → Remote Login* and practise with `ssh localhost`.
+- For the hands-on parts, **one Linux VM you control**. The examples call it `dev-01`, with user `alice` at `192.0.2.20`. Substitute your own values. No VM yet? On a Mac, turn on *System Settings → General → Sharing → Remote Login* and practise with `ssh localhost`.
 
 Prompts show where a command runs:
 
 ```text
 mac$          your workstation (the SSH client)
-ubuntu-lab$   the remote Linux host (the SSH server)
+dev-01$   the remote Linux host (the SSH server)
 ```
 
 ## Learning path

@@ -66,7 +66,7 @@ mac$ ssh-copy-id alice@192.0.2.20
 mac$ ssh-copy-id -i ~/.ssh/id_ed25519.pub alice@192.0.2.20    # choose a specific key
 ```
 
-This repo wraps it as `task ssh:copy-id HOST=ubuntu-lab [KEY=…]`. Look at the guard in [scripts/remote.sh](../../scripts/remote.sh):
+This repo wraps it as `task ssh:copy-id HOST=dev-01 [KEY=…]`. Look at the guard in [scripts/remote.sh](../../scripts/remote.sh):
 
 ```bash
 case "$1" in *.pub) ;; *) die 'pass the PUBLIC key file (*.pub); private keys never leave the Mac' ;; esac
