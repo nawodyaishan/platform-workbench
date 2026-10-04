@@ -11,6 +11,7 @@ A public, profile-driven Bash toolkit that bootstraps, updates and verifies a ma
 - One canonical file per tool under `config/`. Do not add a second aliases, tmux or Vim config.
 - A new host needs matching entries in `bootstrap/hosts.conf` and the `Host` line of `config/ssh/workbench.conf`.
 - Keep Proxmox minimal: no dev stacks, no Kubernetes, no `pve-*` upgrades.
+- Boundary with the sibling `homelab` repo: homelab owns the Proxmox host, which guests exist, VM sizing and operating modes (`lab-mode.sh`), cluster provisioning, guest-agent integration and recovery. This repo owns the user environment inside guests and the Mac's SSH client config. Registered homelab guests: `dev-01` (`ubuntu`), `rhel-rhcsa01` (`rhel`); `k3s-01` and exam nodes stay unregistered. See [docs/hosts.md](docs/hosts.md#boundary-with-homelab).
 
 ## Spec-driven development
 
