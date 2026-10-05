@@ -122,11 +122,11 @@ platform-workbench verify  profile=ubuntu  host=dev-01 (Ubuntu 24.04 LTS)
 |---|---|---|---|
 | macOS workstation | local | `macos` | Brewfile, shell, Git, SSH client config, Tailscale, OrbStack check, Kubernetes CLIs, Go, minimal Neovim (Go/TS/YAML) |
 | RHCSA VM, RHEL family (RHEL, Alma, Rocky) | `rhel-rhcsa01` | `rhel` | Shell, Git, sshd, Tailscale, podman, kubectl/kubeadm, CKA tools, SELinux and admin utilities |
-| Development VM, Ubuntu LTS | `dev-01` | `ubuntu` | Shell, Git, sshd, Tailscale, Docker CE, kubectl/kubeadm, Helm, k9s, CKA tools |
+| Development VM, Ubuntu LTS | `dev-01` | `ubuntu` | Shell, Git, sshd, Tailscale, Docker CE, kubectl/kubeadm, Helm, k9s, CKA tools. Opt-in full-stack toolchain with `task devstack` |
 | Proxmox VE host | `proxmox` | `proxmox` | Deliberately minimal: shell config, sshd, Tailscale, host utilities. Nothing else |
 | KodeKloud / disposable node | none | none | A paste-in, session-only [shell snippet](docs/kodekloud.md). Nothing installed |
 
-Linux profiles take opt-in extras with `--extras go,node,cka`. See [docs/hosts.md](docs/hosts.md) for the full module list and the steps to add a host.
+Linux profiles take opt-in extras with `--extras go,node,cka` (and `devstack` on `ubuntu`). See [docs/hosts.md](docs/hosts.md) for the full module list and the steps to add a host.
 
 ## Commands
 
@@ -137,6 +137,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 | `task bootstrap` / `update` / `verify` | Lifecycle for this machine (`macos` on a Mac, otherwise `PROFILE=rhel\|ubuntu\|proxmox`) |
 | `task bootstrap HOST=<alias>` (and `update`, `verify`) | The same lifecycle on a registered host, driven from the Mac |
 | `task verify:all` | Verify the Mac and every registered host |
+| `task devstack` / `devstack:update` / `devstack:verify` | Full-stack dev toolchain on this Ubuntu host: nvm + Node LTS, yarn, pnpm, Go, Rust, Temurin, Terraform, AWS CLI, gh, kind, Homebrew ([details](docs/hosts.md#full-stack-dev-toolchain-ubuntu)) |
 | `task main` | Attach to (or create) the local tmux session `main` |
 | `task ssh HOST=<alias>`, `task rhel` / `ubuntu` / `proxmox` | SSH to a host and attach its tmux `main` |
 | `task hosts` | Registered hosts, resolved SSH target, reachability |
@@ -148,7 +149,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 | `task test:remote`, `task test:profiles` | Offline remote-flow tests; container smoke tests for the Linux profiles |
 | `task hooks` | Install the pre-commit hook (secret scan, Markdown formatting) |
 
-Lifecycle flags go after `--`: `--dry-run`, `--yes`, `--extras go,node,cka`.
+Lifecycle flags go after `--`: `--dry-run`, `--yes`, `--extras go,node,cka,devstack`, `--only MOD,...`.
 
 Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with underscores for colons: `make check`, `make test-remote`, `make bootstrap HOST=dev-01 ARGS="--dry-run"`. Run `make` on its own for the summary.
 
@@ -173,6 +174,7 @@ task check           # bash -n, zsh -n, shellcheck, vim/tmux/ghostty/git/ssh con
 task test:remote     # remote payload boundaries and task aliases, without any SSH connection
 task test:profiles   # Rocky 9, Ubuntu 24.04 and Debian containers: dry-run -> bootstrap ->
                      # verify -> second bootstrap must change nothing (needs Docker/OrbStack)
+task test:profiles -- ubuntu-devstack   # opt-in, slow: the same cycle for task devstack
 ```
 
 ## Layout
@@ -181,8 +183,8 @@ task test:profiles   # Rocky 9, Ubuntu 24.04 and Debian containers: dry-run -> b
 bootstrap/
   workbench.sh        lifecycle engine: <bootstrap|update|verify> --profile <name>
   hosts.conf          registered hosts: <ssh-alias> <profile>
-  lib/                OS detection, package managers, marker blocks, host registry
-  modules/            base shell git ssh tailscale containers k8s lang nvim cka
+  lib/                OS detection, package managers, marker blocks, host registry, verified installs
+  modules/            base shell git ssh tailscale containers k8s lang nvim cka devstack
   profiles/           macos (+ Brewfile), rhel, ubuntu, proxmox
 config/               canonical shell, tmux, vim, nvim, herdr, git, ssh and ghostty configs
 kodekloud/            paste-in shell snippets for disposable lab nodes (cka, k8s, terraform, aws, ansible, linux)

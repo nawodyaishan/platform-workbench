@@ -36,7 +36,46 @@ The Proxmox guests above are created, sized, started and stopped by the separate
 
 ## Extras
 
-Linux profiles accept `--extras` (comma-separated): `go` installs a checksum-verified Go tarball, `node` installs distro nodejs/npm, and `cka` installs NFS and etcd clients. Nothing extra is installed by default.
+Linux profiles accept `--extras` (comma-separated): `go` installs a checksum-verified Go tarball, `node` installs distro nodejs/npm, and `cka` installs NFS and etcd clients. On `ubuntu`, `devstack` installs the [full-stack dev toolchain](#full-stack-dev-toolchain-ubuntu); with it on, devstack owns Go and Node and the `go`/`node` extras report `n/a`. Nothing extra is installed by default.
+
+`--only MOD,...` limits a run to the listed modules of the profile, in profile order. A name the profile doesn't have is a usage error.
+
+## Full-stack dev toolchain (Ubuntu)
+
+A separate, opt-in command for any `ubuntu`-profile host, such as `dev-01`. It is never part of a plain `task bootstrap`.
+
+```bash
+task devstack -- --dry-run     # show every planned change, make none
+task devstack                  # install
+task devstack:verify           # read-only, offline
+task devstack:update           # newest Node LTS, Go, Rust, AWS CLI, kind; named apt packages
+```
+
+The Make equivalents are `make devstack`, `make devstack-update` and `make devstack-verify` (`ARGS=--dry-run`). Each command runs the ubuntu profile with `--extras devstack --only base,shell,containers,k8s,devstack`, so Git, SSH, Tailscale and the CKA tools are not touched.
+
+| Area | Tool | Source and check |
+|---|---|---|
+| Node | nvm (pinned tag) + the latest LTS Node as `default` | nvm `install.sh` with `PROFILE=/dev/null` (no rc edits) |
+| JS package managers | yarn, pnpm | the `corepack` npm package's shims (Node 25+ no longer bundles Corepack); default versions cached once |
+| Go | latest stable | `go.dev` tarball, SHA-256 checked, `/usr/local/go` |
+| Rust | rustup + stable (`rustfmt`, `clippy`) | `sh.rustup.rs` with `--no-modify-path` |
+| Java | Eclipse Temurin JDK (`JAVA_MAJOR`, 25) + Maven | Adoptium apt repo, key fingerprint pinned |
+| Terraform, GitHub CLI | `terraform`, `gh` | HashiCorp and GitHub CLI apt repos, key fingerprints pinned |
+| AWS | AWS CLI v2 | official per-user installer into `~/.local` (verifies its own download) |
+| Kubernetes | `kind` (CLI only, no cluster is created) plus the `k8s` module's kubectl, crictl, Helm and k9s | GitHub release, SHA-256 checked |
+| Containers | Docker CE, buildx, compose | the `containers` module |
+| Homebrew | Homebrew on Linux, `/home/linuxbrew/.linuxbrew` | official `install.sh`, `NONINTERACTIVE=1`; `update` runs `brew update` only |
+| CLIs and build deps | `PKGS_DEV` in `bootstrap/profiles/ubuntu.sh`: build-essential, ripgrep, fd (`fdfind`), fzf, bat (`batcat`), yq, httpie, direnv, shellcheck, sqlite3, postgresql-client, redis-tools, pipx and more | Ubuntu apt |
+
+Notes:
+
+- **Trust.** The nvm, rustup, Homebrew and AWS installers are vendor scripts fetched over HTTPS at run time, downloaded completely before they run, and never run as root. nvm is pinned to a tag; the others have no stable tag. Installer output goes to `$TMPDIR/platform-workbench-devstack.log`.
+- **Key rotation.** A pinned apt key that no longer matches fails closed with `FAIL`. Re-check the vendor's published fingerprint before updating the pin in `devstack.sh`. HashiCorp last rotated on 2026-09-10.
+- **Node LTS moves.** Node 26 becomes LTS on 2026-10-28. The next `task devstack:update` after that installs it, reinstalls global packages (corepack) from the old version and repoints `default`. Older versions stay installed.
+- **Shell wiring.** `config/shell/bashrc` loads nvm and `brew shellenv` and puts `~/.cargo/bin`, `/usr/local/go/bin` and `~/.local/bin` on `PATH`. Open a new shell after the first run.
+- **arm64.** Everything has arm64 builds. Homebrew on Linux arm64 is a lower support tier, so a failed install there is `WARN`, not `FAIL`.
+- **From the Mac.** `task bootstrap HOST=dev-01 -- --extras devstack --only base,shell,containers,k8s,devstack` runs the same thing remotely (the payload is the tracked files only, so commit first). Remote `verify` takes no flags, so check the stack on the host with `task devstack:verify`.
+- **Out of scope.** Credentials (`aws configure`, `gh auth login`, `docker login`), editors, databases as services, and creating Kubernetes clusters (that belongs to the homelab repo).
 
 ## Adding a host
 
