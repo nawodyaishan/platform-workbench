@@ -20,8 +20,11 @@ export EDITOR=vim
 export VISUAL=vim
 export KUBE_EDITOR=vim
 
+# Homebrew on Linux, if installed
+[ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
 # PATH (only add what exists, only once)
-for _d in "$HOME/.local/bin" /usr/local/go/bin "$HOME/go/bin"; do
+for _d in "$HOME/.local/bin" /usr/local/go/bin "$HOME/go/bin" "$HOME/.cargo/bin"; do
   [ -d "$_d" ] && case ":$PATH:" in *":$_d:"*) ;; *) PATH="$_d:$PATH" ;; esac
 done
 unset _d
