@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Smoke-test the bootstrap profiles inside throwaway containers.
 #
-#   scripts/test-profiles.sh [rhel|ubuntu|proxmox ...]     (default: all three)
+#   scripts/test-profiles.sh [rhel|ubuntu|proxmox|ubuntu-devstack ...]
+#                                          (default: rhel ubuntu proxmox)
 #
 # Each run: dry-run, bootstrap, verify, then a second bootstrap that must change nothing
 # (idempotence). Uses whatever container engine `docker` points at (OrbStack here).
 # Images: rhel=rockylinux:9, ubuntu=ubuntu:24.04, proxmox=debian:bookworm-slim
 # (proxmox runs with --force-profile and a fake pveversion; systemd is not available, so
 # service checks that need it are expected to warn or n/a rather than pass).
+# ubuntu-devstack is opt-in and heavy (Go, Node, Rust, Temurin, Homebrew...): the ubuntu
+# profile with --extras devstack, limited to the modules `task devstack` runs.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -28,7 +31,7 @@ trap 'exit 143' TERM
 image_for() {
   case "$1" in
     rhel) echo rockylinux:9 ;;
-    ubuntu) echo ubuntu:24.04 ;;
+    ubuntu|ubuntu-devstack) echo ubuntu:24.04 ;;
     proxmox) echo debian:bookworm-slim ;;
   esac
 }
@@ -37,7 +40,10 @@ image_for() {
 # shellcheck disable=SC2016  # expanded inside the container, not here
 INNER='
 set -euo pipefail
-profile=$1
+profile=$1 extra=""
+if [ "$profile" = ubuntu-devstack ]; then
+  profile=ubuntu; extra="--extras devstack --only base,shell,containers,k8s,devstack"
+fi
 if [ "$profile" = proxmox ]; then
   apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates curl gnupg >/dev/null
   printf "#!/bin/sh\necho pve-manager/8.2.0\n" > /usr/local/bin/pveversion; chmod +x /usr/local/bin/pveversion
@@ -48,7 +54,7 @@ else
   else apt-get update -qq >/dev/null && apt-get install -y -qq sudo ca-certificates curl gnupg >/dev/null; fi
   useradd -m tester
   echo "tester ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/tester
-  run() { su tester -c "/repo/bootstrap/workbench.sh $* --profile $profile --force-profile --yes"; }
+  run() { su tester -c "/repo/bootstrap/workbench.sh $* --profile $profile --force-profile --yes $extra"; }
   # Legacy marker fixture: blocks from the previous toolkit name (including its main block)
   # must be migrated into the single new block.
   printf "# >>> ops-workbench >>>\nexport OPS_WORKBENCH_HOME=/old\n# <<< ops-workbench <<<\n# >>> ops-workbench dotfiles >>>\nalias old=1\n# <<< ops-workbench dotfiles <<<\n# >>> ops-workbench nvm >>>\nx=1\n# <<< ops-workbench nvm <<<\n" > /home/tester/.bashrc
@@ -68,6 +74,11 @@ else
   if grep -q "ops-workbench" /home/tester/.bashrc; then echo "LEGACY-NOT-MIGRATED"; exit 1; fi
   grep -qF "# >>> platform-workbench >>>" /home/tester/.bashrc && echo "LEGACY-MIGRATED" || { echo "BLOCK-MISSING"; exit 1; }
 fi
+if [ -n "$extra" ]; then
+  # A new login shell must find every tool through the canonical bashrc alone.
+  su - tester -c "bash -ic \"for c in node npm yarn pnpm go rustc cargo java mvn terraform aws gh kind brew docker kubectl helm; do command -v \\\$c >/dev/null || { echo MISSING: \\\$c; exit 1; }; done\"" 2>/dev/null \
+    && echo "DEVSTACK-ON-PATH" || { echo "DEVSTACK-NOT-ON-PATH"; exit 1; }
+fi
 '
 
 rc=0
@@ -82,7 +93,8 @@ for p in "${profiles[@]}"; do
     continue
   fi
   active_container="platform-workbench-test-$p-$$"
-  if limited 900 docker run --rm --name "$active_container" -v "$ROOT:/repo:ro" "$img" bash -c "$INNER" _ "$p"; then
+  seconds=900; [ "$p" = ubuntu-devstack ] && seconds=2700
+  if limited "$seconds" docker run --rm --name "$active_container" -v "$ROOT:/repo:ro" "$img" bash -c "$INNER" _ "$p"; then
     echo "PASS $p"
   else
     echo "FAIL $p"; rc=1
