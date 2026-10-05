@@ -12,35 +12,18 @@ tasks:
     cmds: [{task: help}]
 
   help:
-    desc: Show workbench commands
-    cmds:
-      - |
-        cat <<'EOF'
-        platform-workbench
-          lifecycle  task bootstrap|update|verify [HOST=alias | PROFILE=macos|rhel|ubuntu|proxmox] [-- flags]
-                     task verify:all
-          sessions   task main | task ssh HOST=alias | task rhel | task ubuntu | task proxmox
-          hosts      task hosts | task ssh:copy-id HOST=alias [KEY=~/.ssh/id_ed25519.pub] | task gh-key HOST=alias
-          shell      task aliases   (paste-in installer for the aliases and functions)
-                     task install:aliases   (aliases only, onto this machine; no bootstrap)
-          install    task install:task [-- --distro ubuntu|rhel|proxmox --method binary --dry-run]
-                     task install:ubuntu | install:rhel | install:proxmox [-- --dry-run]
-          devstack   task devstack | devstack:update | devstack:verify [-- --dry-run]   (Ubuntu)
-          labs       task kk
-          repo       task lint | secrets | repo | check | test:remote | test:profiles | hooks
-        flags: --dry-run  --yes  --extras go,node,cka,devstack  --only MOD,...
-        hosts: {{.HOSTS}}(bootstrap/hosts.conf)
-        EOF
+    desc: Show the command reference (task help -- <command> for one command)
+    cmds: ['"{{.SH}}/help.sh" {{.CLI_ARGS}}']
 
   # --- Lifecycle -------------------------------------------------------------------
   bootstrap:
-    desc: Install and wire a profile locally, or on a registered HOST from the Mac
+    desc: Install and wire a profile, locally or on HOST
     cmds: [{task: _lifecycle, vars: {VERB: bootstrap}}]
   update:
-    desc: Upgrade only profile-managed packages and refresh config
+    desc: Upgrade profile-managed packages and refresh config
     cmds: [{task: _lifecycle, vars: {VERB: update}}]
   verify:
-    desc: Read-only health check (exit 1 on failure)
+    desc: Read-only health check, exits 1 on failure
     cmds: [{task: _lifecycle, vars: {VERB: verify}}]
   _lifecycle:
     internal: true
@@ -70,43 +53,43 @@ tasks:
 
   # --- Sessions --------------------------------------------------------------------
   main:
-    desc: Attach to (or create) the local tmux session "main"
+    desc: Attach to or create the local tmux session "main"
     interactive: true
     cmds: ['exec tmux new-session -A -s main']
   ssh:
-    desc: SSH to HOST and attach to its tmux "main" (login shell if tmux is absent)
+    desc: SSH to HOST and attach its tmux session "main"
     interactive: true
     requires: {vars: [HOST]}
     cmds: ['ssh -t "{{.HOST}}" ''command -v tmux >/dev/null && exec tmux new-session -A -s main || exec "${SHELL:-/bin/bash}" -l''']
   rhel:
-    desc: Session on rhel-rhcsa01
+    desc: Open a session on rhel-rhcsa01
     interactive: true
     cmds: [{task: ssh, vars: {HOST: rhel-rhcsa01}}]
   ubuntu:
-    desc: Session on dev-01
+    desc: Open a session on dev-01
     interactive: true
     cmds: [{task: ssh, vars: {HOST: dev-01}}]
   proxmox:
-    desc: Session on proxmox
+    desc: Open a session on proxmox
     interactive: true
     cmds: [{task: ssh, vars: {HOST: proxmox}}]
 
   # --- Hosts -----------------------------------------------------------------------
   hosts:
-    desc: List registered hosts, their resolved SSH target and reachability (read-only)
+    desc: List registered hosts, SSH targets and reachability
     cmds: ['"{{.SH}}/remote.sh" hosts']
   ssh:copy-id:
-    desc: First contact - install a PUBLIC key on HOST with ssh-copy-id
+    desc: Install a public key on HOST for first contact
     interactive: true
     requires: {vars: [HOST]}
     cmds: ['"{{.SH}}/remote.sh" copy-id "{{.HOST}}" {{if .KEY}}"{{.KEY}}"{{end}}']
   gh-key:
-    desc: Create a distinct GitHub key on HOST; asks before publishing the public half
+    desc: Create a distinct GitHub key on HOST
     interactive: true
     requires: {vars: [HOST]}
     cmds: ['"{{.SH}}/remote.sh" gh-key "{{.HOST}}"']
   aliases:
-    desc: Copy a paste-in installer for the aliases and functions (prints it without pbcopy)
+    desc: Copy the paste-in aliases installer to the clipboard
     cmds:
       - |
         if command -v pbcopy >/dev/null 2>&1; then
@@ -115,17 +98,17 @@ tasks:
           "{{.SH}}/aliases-snippet.sh"
         fi
   install:aliases:
-    desc: Install only the aliases and functions on this machine (marker block; works as root)
+    desc: Install only the aliases and functions on this machine
     cmds:
       - '"{{.SH}}/aliases-snippet.sh" | bash'
 
   # --- Install flow for Linux hosts --------------------------------------------------
   # Run these on the host itself. `make install-task` does the same before Task exists.
   install:task:
-    desc: Install Task on this Linux host (-- --distro ubuntu|rhel|proxmox --method repo|binary --dry-run)
+    desc: Install Task on this Linux host
     cmds: ['"{{.SH}}/install-task.sh" {{.CLI_ARGS}}']
   install:ubuntu:
-    desc: Task + full ubuntu profile on this host (-- --dry-run first)
+    desc: Install Task and the ubuntu profile on this host
     interactive: true
     cmds:
       - |
@@ -133,7 +116,7 @@ tasks:
         "{{.SH}}/install-task.sh" --distro ubuntu $dry
         exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile ubuntu {{.CLI_ARGS}}
   install:rhel:
-    desc: Task + full rhel profile on this host (-- --dry-run first)
+    desc: Install Task and the rhel profile on this host
     interactive: true
     cmds:
       - |
@@ -141,7 +124,7 @@ tasks:
         "{{.SH}}/install-task.sh" --distro rhel $dry
         exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile rhel {{.CLI_ARGS}}
   install:proxmox:
-    desc: Task + minimal proxmox profile on this host, run as root (-- --dry-run first)
+    desc: Install Task and the minimal proxmox profile, as root
     interactive: true
     cmds:
       - |
@@ -150,12 +133,12 @@ tasks:
         exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile proxmox {{.CLI_ARGS}}
   # Full-stack toolchain on this Ubuntu host: only base, shell (rc wiring), containers, k8s and devstack run.
   devstack:
-    desc: Install the full-stack dev toolchain on this Ubuntu host (-- --dry-run first)
+    desc: Install the full-stack toolchain on this Ubuntu host
     interactive: true
     cmds:
       - '"{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
   devstack:update:
-    desc: Upgrade the dev toolchain (Node LTS, Go, Rust, AWS CLI, kind, its apt packages)
+    desc: Upgrade Node LTS, Go, Rust, AWS CLI, kind and apt tools
     interactive: true
     cmds:
       - '"{{.ROOT}}/bootstrap/workbench.sh" update --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
@@ -164,7 +147,7 @@ tasks:
     cmds:
       - '"{{.ROOT}}/bootstrap/workbench.sh" verify --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
   kk:
-    desc: Copy a KodeKloud shell snippet to the Mac clipboard (TOPIC=cka|k8s|terraform|aws|ansible|linux, default cka)
+    desc: Copy a KodeKloud shell snippet to the clipboard
     cmds:
       - |
         topic="{{.TOPIC}}"
@@ -177,7 +160,7 @@ tasks:
 
   # --- Repository ------------------------------------------------------------------
   lint:
-    desc: Syntax-check scripts and validate every canonical config
+    desc: Syntax-check scripts and validate every config
     cmds:
       - |
         R="{{.ROOT}}"
@@ -249,20 +232,20 @@ tasks:
         [ "$rc" -eq 0 ] && echo 'ok: ssh defaults'
         exit "$rc"
   secrets:
-    desc: Scan files Git would see for credentials and private infrastructure details
+    desc: Scan for credentials and private infrastructure details
     cmds: ['"{{.SH}}/check-secrets.sh"']
   repo:
-    desc: Check structure, host registry consistency and Markdown links
+    desc: Check structure, host registry and Markdown links
     cmds: ['"{{.SH}}/check-repo.sh"']
   check:
     desc: Run lint, secrets and repo checks
     cmds: [{task: lint}, {task: secrets}, {task: repo}]
   test:remote:
-    desc: Exercise payload boundaries, host registry and session tasks without connecting
+    desc: Offline tests for the remote flow and session tasks
     cmds: ['"{{.SH}}/test-remote.sh"']
   test:profiles:
-    desc: Container smoke tests for Linux profiles (-- rhel ubuntu proxmox)
+    desc: Container smoke tests for the Linux profiles
     cmds: ['"{{.SH}}/test-profiles.sh" {{.CLI_ARGS}}']
   hooks:
-    desc: Install the pre-commit hook (secret scan + Markdown formatting)
+    desc: Install the pre-commit hook
     cmds: ['"{{.SH}}/install-hooks.sh"']
