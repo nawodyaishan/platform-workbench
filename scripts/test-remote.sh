@@ -48,6 +48,12 @@ if PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-rhcsa01 --profile 
 fi
 plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap rhel-rhcsa01 --dry-run)
 grep -q 'modules: base shell git ssh' <<< "$plan"
+plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap dev-01 --dry-run --extras devstack --only base,shell,containers,k8s,devstack)
+grep -q 'modules: .* devstack$' <<< "$plan"
+grep -q 'args: --dry-run --extras devstack --only base,shell,containers,k8s,devstack$' <<< "$plan"
+if PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap dev-01 --dry-run --only=base 2>/dev/null; then
+  echo '--only=LIST accepted' >&2; exit 1
+fi
 plan=$(PATH="$tmp:$PATH" "$ROOT/scripts/remote.sh" bootstrap proxmox --dry-run)
 grep -q 'modules: base shell ssh tailscale$' <<< "$plan"
 [ ! -s "$WB_TEST_LOG" ] || { echo 'dry-run or refused call reached ssh' >&2; exit 1; }

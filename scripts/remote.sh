@@ -2,7 +2,7 @@
 # Mac-driven lifecycle for the hosts in bootstrap/hosts.conf. The remote host never needs a
 # clone of this repository or any Git credential: tracked files are streamed over SSH.
 #
-#   remote.sh <bootstrap|update|verify> <host> [--dry-run] [--yes] [--extras LIST]
+#   remote.sh <bootstrap|update|verify> <host> [--dry-run] [--yes] [--extras LIST] [--only MODS]
 #   remote.sh gh-key <host>      distinct GitHub key on the host; asks before publishing
 #   remote.sh copy-id <host> [public-key-file]   first contact: install a public key only
 #   remote.sh hosts              registry, resolved SSH target and read-only reachability
@@ -103,7 +103,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry-run|--yes) ;;
     --profile|--force-profile|--expect-host) die "remote controls $arg" ;;
-    --extras=*) die 'use --extras NAME, not --extras=NAME' ;;
+    --extras=*|--only=*) die "use ${arg%%=*} LIST, not ${arg%%=*}=LIST" ;;
     *) case "$arg" in *[!a-zA-Z0-9_,.-]*|'') die "unsafe workbench argument: $arg" ;; esac ;;
   esac
 done
@@ -114,6 +114,7 @@ if [ "$dry" -eq 1 ]; then
     MODULES=(); PKGS_BASE=(); PKGS_NET=(); PKGS_ADMIN=()
     # shellcheck source=/dev/null
     . "$ROOT/bootstrap/profiles/$profile.sh"
+    printf '  args: %s\n' "$*"
     printf '  modules: %s\n' "${MODULES[*]-}"
     printf '  base packages: %s\n' "${PKGS_BASE[*]-}"
     printf '  network packages: %s\n' "${PKGS_NET[*]-}"
