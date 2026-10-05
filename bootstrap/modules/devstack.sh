@@ -141,6 +141,36 @@ _ds_corepack() { # <bootstrap|update>
   else bad "corepack could not fetch yarn/pnpm (log: $DS_LOG)"; fi
 }
 
+# pnpm is corepack's shim in the nvm Node. Two things keep it that way:
+# - $PNPM_HOME/bin (which config/shell/bashrc puts on PATH behind nvm) must exist, or
+#   `pnpm add -g` has no global bin directory;
+# - the standalone installer (get.pnpm.io) appends a "# pnpm" ... "# pnpm end" block to
+#   ~/.bashrc that puts its own pnpm ahead of nvm, so that block is removed (after a backup).
+#   Its files stay on disk because pnpm's store lives in the same directory.
+DS_PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+_ds_pnpm_block() { [ -f "$HOME/.bashrc" ] && grep -qx '# pnpm' "$HOME/.bashrc" && grep -qx '# pnpm end' "$HOME/.bashrc"; }
+_ds_pnpm_standalone() { [ -e "$DS_PNPM_HOME/bin/pnpm" ] || [ -L "$DS_PNPM_HOME/bin/pnpm" ]; }
+_ds_pnpm_standalone_note() {
+  warn "standalone pnpm in $DS_PNPM_HOME/bin is shadowed by corepack's; remove it: rm -f $DS_PNPM_HOME/bin/{pnpm,pnpx,pn,pnx}"
+}
+
+_ds_pnpm() {
+  if [ -d "$DS_PNPM_HOME/bin" ]; then ok "pnpm global bin dir $DS_PNPM_HOME/bin"
+  elif is_dry_run; then dry_note "create the pnpm global bin dir $DS_PNPM_HOME/bin"
+  else mkdir -p "$DS_PNPM_HOME/bin" && changed "created the pnpm global bin dir $DS_PNPM_HOME/bin"; fi
+  if _ds_pnpm_block; then
+    if is_dry_run; then dry_note "remove the standalone pnpm block from ~/.bashrc (corepack provides pnpm)"
+    else
+      local tmp; tmp=$(mktemp)
+      backup_copy "$HOME/.bashrc"
+      awk '$0 == "# pnpm" {skip = 1} !skip {print} $0 == "# pnpm end" {skip = 0}' "$HOME/.bashrc" >"$tmp"
+      cat "$tmp" >"$HOME/.bashrc"; rm -f "$tmp"
+      changed "removed the standalone pnpm block from ~/.bashrc (backup in $WB_BACKUP_DIR)"
+    fi
+  fi
+  if _ds_pnpm_standalone; then _ds_pnpm_standalone_note; fi
+}
+
 # --- Rust -----------------------------------------------------------------------------------------
 _ds_rust() { # <bootstrap|update>
   local f before after
@@ -269,6 +299,7 @@ _ds_run() { # <bootstrap|update>
   _ds_nvm_install
   _ds_node "$1"
   _ds_corepack "$1"
+  _ds_pnpm
   _ds_rust "$1"
   _ds_kind "$1"
   _ds_aws "$1"
@@ -310,6 +341,9 @@ devstack_verify() {
   _ds_check corepack _ds_nvm corepack --version
   _ds_check yarn _ds_cp 0 yarn --version
   _ds_check pnpm _ds_cp 0 pnpm --version
+  if [ -d "$DS_PNPM_HOME/bin" ]; then ok "pnpm global bin dir $DS_PNPM_HOME/bin"; else warn "pnpm global bin dir $DS_PNPM_HOME/bin missing (pnpm add -g needs it)"; fi
+  if _ds_pnpm_block; then warn "$HOME/.bashrc has a standalone pnpm block that shadows the corepack pnpm (task devstack removes it)"; fi
+  if _ds_pnpm_standalone; then _ds_pnpm_standalone_note; fi
   _ds_check rustc "$HOME/.cargo/bin/rustc" --version
   _ds_check cargo "$HOME/.cargo/bin/cargo" --version
   _ds_check clippy "$HOME/.cargo/bin/cargo" clippy --version
