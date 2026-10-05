@@ -76,8 +76,12 @@ else
 fi
 if [ -n "$extra" ]; then
   # A new login shell must find every tool through the canonical bashrc alone.
-  su - tester -c "bash -ic \"for c in node npm yarn pnpm go rustc cargo java mvn terraform aws gh kind brew docker kubectl helm; do command -v \\\$c >/dev/null || { echo MISSING: \\\$c; exit 1; }; done\"" 2>/dev/null \
+  su - tester -c "bash -ic \"for c in node npm yarn pnpm go rustc cargo java mvn terraform aws gh kind brew docker kubectl helm agentic-sdd; do command -v \\\$c >/dev/null || { echo MISSING: \\\$c; exit 1; }; done\"" 2>/dev/null \
     && echo "DEVSTACK-ON-PATH" || { echo "DEVSTACK-NOT-ON-PATH"; exit 1; }
+  for d in .claude/skills .codex/skills .agents/skills .gemini/antigravity-cli/skills; do
+    [ -f "/home/tester/$d/agentic-sdd-router/SKILL.md" ] || { echo "SKILLS-MISSING: $d"; exit 1; }
+  done
+  echo "AGENTIC-SDD-SKILLS-OK"
 fi
 '
 
