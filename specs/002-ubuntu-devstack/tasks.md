@@ -59,6 +59,15 @@ Reads `spec.md` and `plan.md` (both drafted 2026-10-04). Specialist assignment: 
 - Limitation, documented: remote `verify` accepts no flags, so `task verify HOST=dev-01` shows devstack as `n/a`; check the stack on the host with `task devstack:verify`. The remote payload is tracked files only, so a remote run needs the work committed first.
 - T9 results: `task check` pass; `task test:remote` pass; `task test:profiles` (rhel, ubuntu, proxmox) all PASS and IDEMPOTENT; `task test:profiles -- ubuntu-devstack` PASS (native arm64 `ubuntu:24.04`, about 4 minutes): dry-run `changed=26` with no changes made, bootstrap `changed=25 fail=0`, verify `ok=76 fail=0`, rerun `changed=0`, DEVSTACK-ON-PATH.
 
+### Batch 3: agentic-sdd skills (amendment 2)
+
+- Tasks: T10 `devstack.sh` builds the agentic-sdd CLI from `AGENTIC_SDD_VERSION` (tag) checked against `AGENTIC_SDD_COMMIT`, then previews and applies only when something differs (a no-op apply still writes a log); verify checks the version and that preview is all `up to date` (`install` lines are `FAIL`, `replace` lines are `WARN`). T11 container case asserts the binary is on `PATH` and `agentic-sdd-router/SKILL.md` exists in all four client directories. T12 docs.
+- Notes: the release only ships `darwin_all`, and the module path `agentic-sdd` is not `go install`-able, hence the source build. It needs no module downloads (no dependencies) and runs with `GOTOOLCHAIN=local`.
+- Results: `task check` and `task test:remote` pass. `task test:profiles -- ubuntu-devstack` PASS: dry-run shows the build and apply steps; bootstrap `changed=27 fail=0`; verify `ok=78 fail=0` (`agentic-sdd 0.3.0`, skills up to date); rerun `changed=0`; `AGENTIC-SDD-SKILLS-OK`.
+- Field note: nawodyaishan ran the Batch 1–2 command on their own Ubuntu 26.04 host (2026-10-05): `ok=22 fail=0`. `rust` reported "not found" there because Rust has no `rust` command (`rustc`, `cargo` and `rustup` are the binaries); no change needed.
+- State: **awaiting human review**
+- Next action: human review, then commit.
+
 Not in any batch: a real run on `dev-01` (`task devstack` on the host, or `task bootstrap HOST=dev-01 -- --extras devstack --only base,shell,containers,k8s,devstack`). It needs separate, explicit human authorization when it happens.
 
 ## Approval and continuation

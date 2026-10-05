@@ -21,6 +21,7 @@ In scope, all on Ubuntu LTS (24.04 and later), amd64 and arm64:
 | Terraform | terraform CLI | HashiCorp apt repo, key fingerprint-checked |
 | AWS | AWS CLI v2 | official per-user `install.sh` (installs to `~/.local`, verifies its own download) |
 | Other CLIs | gh, ripgrep, fd, fzf, bat, yq, httpie, direnv, shellcheck, sqlite3, postgresql-client, redis-tools | GitHub CLI apt repo (key-checked); the rest from Ubuntu apt |
+| Agent skills | agentic-sdd skills for Claude Code, Codex, Antigravity CLI | the user's public [agentic-sdd](https://github.com/nawodyaishan/agentic-sdd) repo, built from a pinned tag and commit with the Go above, then `agentic-sdd apply` (amendment, 2026-10-05) |
 | Build deps | build-essential, pkg-config, libssl-dev, zlib1g-dev, libffi-dev, python3-venv, python3-pip, pipx, procps, file, zip, xz-utils | Ubuntu apt |
 
 - A new `devstack` module (`devstack_bootstrap`, `_update`, `_verify`) added to the `ubuntu` profile but gated behind a new `devstack` extra, the same mechanism as the existing `go`, `node` and `cka` extras.
@@ -81,3 +82,5 @@ None blocking. Recorded assumptions, each overridable at approval:
 Status: **approved**. Approver: nawodyaishan (chat, 2026-10-04, "approved" in reply to the draft summary). Scope covered: `spec.md`, `plan.md` and `tasks.md` as committed in `a0b4818`, including the four recorded assumptions. Authorization covers implementing Batch 1. A real run on `dev-01` or any other host is not authorized.
 
 Amendment: pnpm through the corepack shims (no separate `pnpm` package) and the added `shell` module were accepted with Batch 1 (nawodyaishan, chat, 2026-10-05, "proceed" after the Batch 1 review summary). The scope table and command line above reflect them.
+
+Amendment 2 (requested by nawodyaishan, chat, 2026-10-05: "also add my agentic sdd skills or current macos skills dir transfer operation to same task devstack"): `task devstack` also installs the agentic-sdd skills from the public repo. Copying the Mac's whole `~/.claude/skills` directory was not chosen: `task devstack` runs on the host, the Mac directory mixes third-party skills, and the repo route is reproducible. Recorded in `tasks.md` Batch 3.
