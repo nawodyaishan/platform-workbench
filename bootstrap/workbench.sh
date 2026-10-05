@@ -43,6 +43,8 @@ export DRY_RUN WB_EXPECT_HOST WB_YES WB_FORCE_PROFILE WB_PROFILE
 . "$WB_ROOT/bootstrap/lib/packages.sh"
 # shellcheck source=lib/hosts.sh
 . "$WB_ROOT/bootstrap/lib/hosts.sh"
+# shellcheck source=lib/install.sh
+. "$WB_ROOT/bootstrap/lib/install.sh"
 
 # shellcheck disable=SC2329
 extra_on() { case ",$WB_EXTRAS," in *",$1,"*) return 0 ;; esac; return 1; }
