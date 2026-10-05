@@ -65,11 +65,13 @@ The Make equivalents are `make devstack`, `make devstack-update` and `make devst
 | Kubernetes | `kind` (CLI only, no cluster is created) plus the `k8s` module's kubectl, crictl, Helm and k9s | GitHub release, SHA-256 checked |
 | Containers | Docker CE, buildx, compose | the `containers` module |
 | Homebrew | Homebrew on Linux, `/home/linuxbrew/.linuxbrew` | official `install.sh`, `NONINTERACTIVE=1`; `update` runs `brew update` only |
+| Agent skills | [agentic-sdd](https://github.com/nawodyaishan/agentic-sdd) CLI in `~/.local/bin`, its skills in `~/.claude`, `~/.codex`, `~/.agents` and `~/.gemini/antigravity-cli` | built from a pinned tag and commit (`AGENTIC_SDD_VERSION`/`AGENTIC_SDD_COMMIT`); `apply` backs up any skill it replaces and touches only `agentic-sdd-*` |
 | CLIs and build deps | `PKGS_DEV` in `bootstrap/profiles/ubuntu.sh`: build-essential, ripgrep, fd (`fdfind`), fzf, bat (`batcat`), yq, httpie, direnv, shellcheck, sqlite3, postgresql-client, redis-tools, pipx and more | Ubuntu apt |
 
 Notes:
 
 - **Trust.** The nvm, rustup, Homebrew and AWS installers are vendor scripts fetched over HTTPS at run time, downloaded completely before they run, and never run as root. nvm is pinned to a tag; the others have no stable tag. Installer output goes to `$TMPDIR/platform-workbench-devstack.log`.
+- **Agent skills.** Only the agentic-sdd skills are installed; other skills on the Mac are not copied. Bump the tag and commit in `bootstrap/profiles/ubuntu.sh` to take a new release. Verify warns if a skill was edited on the host; the next `task devstack` restores it after a backup (`agentic-sdd backups`, `agentic-sdd restore`).
 - **Key rotation.** A pinned apt key that no longer matches fails closed with `FAIL`. Re-check the vendor's published fingerprint before updating the pin in `devstack.sh`. HashiCorp last rotated on 2026-09-10.
 - **Node LTS moves.** Node 26 becomes LTS on 2026-10-28. The next `task devstack:update` after that installs it, reinstalls global packages (corepack) from the old version and repoints `default`. Older versions stay installed.
 - **Shell wiring.** `config/shell/bashrc` loads nvm and `brew shellenv` and puts `~/.cargo/bin`, `/usr/local/go/bin` and `~/.local/bin` on `PATH`. Open a new shell after the first run.
