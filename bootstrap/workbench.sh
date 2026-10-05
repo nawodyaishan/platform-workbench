@@ -54,7 +54,7 @@ extra_on() { case ",$WB_EXTRAS," in *",$1,"*) return 0 ;; esac; return 1; }
 # Profile defaults, then the profile itself.
 MODULES=(); PKGS_BASE=(); PKGS_NET=(); PKGS_ADMIN=(); MAC_APPS=()
 CONTAINER_ENGINE=none; K8S_MINOR=""; GO_VERSION=""
-PKGS_DEV=(); NVM_VERSION=""; JAVA_MAJOR=""
+PKGS_DEV=(); NVM_VERSION=""; JAVA_MAJOR=""; AGENTIC_SDD_VERSION=""; AGENTIC_SDD_COMMIT=""
 # shellcheck source=/dev/null
 . "$WB_ROOT/bootstrap/profiles/$WB_PROFILE.sh"
 if extra_on k8s-cluster; then

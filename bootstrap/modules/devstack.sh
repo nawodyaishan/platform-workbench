@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # devstack: opt-in full-stack developer toolchain for the ubuntu profile (--extras devstack).
 # nvm + LTS Node, yarn/pnpm via corepack, latest Go, Rust, Temurin JDK + Maven, kind,
-# Homebrew, Terraform, AWS CLI v2, gh and common CLIs. Docker and kubectl/helm/k9s come
+# Homebrew, Terraform, AWS CLI v2, gh, common CLIs and the agentic-sdd agent skills. Docker and kubectl/helm/k9s come
 # from the containers and k8s modules. Run alone with: task devstack. Sourced by workbench.sh.
 # shellcheck disable=SC2034,SC2015
 
 DS_NVM_DIR="$HOME/.nvm"
 DS_BREW=/home/linuxbrew/.linuxbrew/bin/brew
+DS_ASDD="$HOME/.local/bin/agentic-sdd"
 DS_LOG="${TMPDIR:-/tmp}/platform-workbench-devstack.log"
 
 # Signing keys, checked against each vendor's published fingerprints (2026-10-04).
@@ -212,6 +213,54 @@ _ds_brew() { # <bootstrap|update>
   rm -f "$f"
 }
 
+# --- agentic-sdd skills (Claude Code, Codex, Antigravity CLI) --------------------------------
+# The release ships only a macOS binary and the Go module path is not go-installable, so
+# build the pinned tag from source with the Go installed above. The binary embeds the
+# skills; its apply backs up anything it replaces and touches only agentic-sdd-* skills.
+_ds_asdd_version() { "$DS_ASDD" version 2>/dev/null | awk 'NR==1 {print $2}'; }
+
+# _ds_asdd_plan: preview counts as "<install> <replace>" (read-only, offline).
+_ds_asdd_plan() {
+  "$DS_ASDD" preview | awk '/^install /{i++} /^replace /{r++} END{printf "%d %d\n", i, r}'
+}
+
+_ds_asdd_build() {
+  local dir want=${AGENTIC_SDD_VERSION#v}
+  if [ "$(_ds_asdd_version)" = "$want" ]; then ok "agentic-sdd $want"; return 0; fi
+  if is_dry_run; then dry_note "build agentic-sdd $AGENTIC_SDD_VERSION from source into ~/.local/bin"; return 0; fi
+  [ -x /usr/local/go/bin/go ] || { bad "go missing; skipped agentic-sdd"; return 1; }
+  dir=$(mktemp -d)
+  if ! git -c advice.detachedHead=false clone -q --depth 1 --branch "$AGENTIC_SDD_VERSION" \
+      https://github.com/nawodyaishan/agentic-sdd.git "$dir/src" >>"$DS_LOG" 2>&1; then
+    rm -rf "$dir"; bad "could not clone agentic-sdd $AGENTIC_SDD_VERSION"; return 1
+  fi
+  # A moved tag fails closed, like a rotated apt key.
+  if [ "$(git -C "$dir/src" rev-parse HEAD)" != "$AGENTIC_SDD_COMMIT" ]; then
+    rm -rf "$dir"; bad "agentic-sdd $AGENTIC_SDD_VERSION is not the pinned commit $AGENTIC_SDD_COMMIT"; return 1
+  fi
+  mkdir -p "$(dirname "$DS_ASDD")"
+  if (cd "$dir/src" && GOTOOLCHAIN=local CGO_ENABLED=0 /usr/local/go/bin/go build -trimpath \
+      -ldflags "-s -w -X agentic-sdd/internal/version.Version=$want -X agentic-sdd/internal/version.Commit=${AGENTIC_SDD_COMMIT:0:7}" \
+      -o "$DS_ASDD" ./cmd/agentic-sdd) >>"$DS_LOG" 2>&1; then
+    changed "built agentic-sdd $want"
+  else bad "agentic-sdd build failed (log: $DS_LOG)"; rm -rf "$dir"; return 1; fi
+  rm -rf "$dir"
+}
+
+_ds_asdd() {
+  local plan
+  _ds_asdd_build || return 0
+  # Only reached in a dry-run that would (re)build: preview the pinned binary, not an old one.
+  if [ "$(_ds_asdd_version)" != "${AGENTIC_SDD_VERSION#v}" ]; then
+    dry_note "apply the agentic-sdd skills to ~/.claude, ~/.codex, ~/.agents and ~/.gemini (backing up any replaced)"; return 0
+  fi
+  plan=$(_ds_asdd_plan) || { bad "agentic-sdd preview failed"; return 0; }
+  if [ "$plan" = "0 0" ]; then ok "agentic-sdd skills up to date"; return 0; fi
+  if is_dry_run; then dry_note "apply agentic-sdd skills (install/replace: ${plan% *}/${plan#* }; replaced ones are backed up)"; return 0; fi
+  if "$DS_ASDD" apply >>"$DS_LOG" 2>&1; then changed "applied agentic-sdd skills (backups in ~/.agentic-sdd/backups)"
+  else bad "agentic-sdd apply failed (log: $DS_LOG)"; fi
+}
+
 _ds_run() { # <bootstrap|update>
   _ds_path
   require_sudo
@@ -224,6 +273,7 @@ _ds_run() { # <bootstrap|update>
   _ds_kind "$1"
   _ds_aws "$1"
   _ds_brew "$1"
+  _ds_asdd
 }
 
 devstack_bootstrap() {
@@ -273,4 +323,15 @@ devstack_verify() {
   if [ -x "$DS_BREW" ]; then ok "$("$DS_BREW" --version 2>/dev/null | head -1)"
   elif [ "$ARCH" = arm64 ]; then warn "Homebrew missing (arm64 Linux is a lower support tier)"
   else bad "Homebrew missing"; fi
+  local v plan
+  v=$(_ds_asdd_version)
+  if [ "$v" = "${AGENTIC_SDD_VERSION#v}" ]; then ok "agentic-sdd $v"
+  elif [ -n "$v" ]; then bad "agentic-sdd $v, expected ${AGENTIC_SDD_VERSION#v}"
+  else bad "agentic-sdd missing"; return 0; fi
+  plan=$(_ds_asdd_plan 2>/dev/null) || plan="? ?"
+  case "$plan" in
+    "0 0") ok "agentic-sdd skills up to date" ;;
+    "0 "*) warn "agentic-sdd skills edited locally (${plan#* } differ; task devstack restores them, with a backup)" ;;
+    *) bad "agentic-sdd skills missing or unreadable (preview: $plan)" ;;
+  esac
 }

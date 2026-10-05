@@ -12,6 +12,9 @@ GO_VERSION=1.25.1
 # at run time (latest stable, latest LTS); nvm is pinned to a release tag.
 NVM_VERSION=v0.40.8
 JAVA_MAJOR=25
+# agentic-sdd skills, built from this tag; the commit pin makes a moved tag fail closed.
+AGENTIC_SDD_VERSION=v0.3.0
+AGENTIC_SDD_COMMIT=e1ab333e939f8b741813d4c51efddf96f9da64ff
 PKGS_DEV=(build-essential pkg-config libssl-dev zlib1g-dev libffi-dev python3-venv python3-pip pipx
   procps file zip xz-utils ripgrep fd-find fzf bat yq httpie direnv shellcheck sqlite3
   postgresql-client redis-tools)
