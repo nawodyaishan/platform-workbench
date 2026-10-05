@@ -68,6 +68,14 @@ Reads `spec.md` and `plan.md` (both drafted 2026-10-04). Specialist assignment: 
 - State: **awaiting human review**
 - Next action: human review, then commit.
 
+### Batch 4: devstack owns pnpm (amendment 3)
+
+- Tasks: T13 `devstack.sh` `_ds_pnpm`: create `$PNPM_HOME/bin`, remove a `# pnpm` … `# pnpm end` block from `~/.bashrc` after `backup_copy`, and warn about standalone binaries in `$PNPM_HOME/bin`; verify reports the same. T14 `config/shell/bashrc` exports `PNPM_HOME` and adds `$PNPM_HOME/bin` to the only-if-present `PATH` loop (nvm still comes first). T15 container case seeds a standalone pnpm block and binary, then asserts the block is gone and a new login shell runs the nvm pnpm with `pnpm bin -g` = `~/.local/share/pnpm/bin`. T16 docs.
+- Notes: a reproduction in an `ubuntu:26.04` container shows an interactive shell finds the corepack `pnpm` after devstack, while a non-interactive login shell (`bash -lc`) does not, because the wiring loads only in interactive shells. The host's earlier run reported `corepack yarn/pnpm shims` ok. So the "pnpm not found" was most likely a shell opened before nvm was installed; the standalone installer then saw no pnpm on `PATH`. Its files stay on disk because pnpm's store shares `~/.local/share/pnpm`.
+- Results: `task check` and `task test:remote` pass. `task test:profiles -- ubuntu ubuntu-devstack` PASS (`ubuntu:24.04`): ubuntu unchanged and IDEMPOTENT. For ubuntu-devstack, the dry-run lists the block removal and makes no change. Bootstrap removes the block after a backup and warns about the seeded standalone binary. Verify reports `ok=79 warn=1 fail=0`, the warning being that binary. The rerun reports `changed=0`. `PNPM-FROM-DEVSTACK` passes: a login shell runs the nvm pnpm 12.9.1, and `pnpm bin -g` prints `~/.local/share/pnpm/bin`.
+- State: **done**, awaiting human review
+- Next action: push after confirmation, then `git pull && task devstack` on the host.
+
 Not in any batch: a real run on `dev-01` (`task devstack` on the host, or `task bootstrap HOST=dev-01 -- --extras devstack --only base,shell,containers,k8s,devstack`). It needs separate, explicit human authorization when it happens.
 
 ## Approval and continuation
