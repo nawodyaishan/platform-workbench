@@ -59,6 +59,13 @@ else
   # must be migrated into the single new block.
   printf "# >>> ops-workbench >>>\nexport OPS_WORKBENCH_HOME=/old\n# <<< ops-workbench <<<\n# >>> ops-workbench dotfiles >>>\nalias old=1\n# <<< ops-workbench dotfiles <<<\n# >>> ops-workbench nvm >>>\nx=1\n# <<< ops-workbench nvm <<<\n" > /home/tester/.bashrc
   chown tester /home/tester/.bashrc
+  if [ -n "$extra" ]; then
+    # Standalone pnpm fixture (what get.pnpm.io leaves): its rc block must go and its binary
+    # must lose to the corepack pnpm.
+    printf "\n# pnpm\nexport PNPM_HOME=/home/tester/.local/share/pnpm\ncase \":\$PATH:\" in\n  *\":\$PNPM_HOME/bin:\"*) ;;\n  *) export PATH=\"\$PNPM_HOME/bin:\$PATH\" ;;\nesac\n# pnpm end\n" >> /home/tester/.bashrc
+    install -d -o tester /home/tester/.local /home/tester/.local/share /home/tester/.local/share/pnpm /home/tester/.local/share/pnpm/bin
+    printf "#!/bin/sh\necho standalone\n" > /home/tester/.local/share/pnpm/bin/pnpm; chmod +x /home/tester/.local/share/pnpm/bin/pnpm
+  fi
 fi
 echo "### dry-run";   run bootstrap --dry-run
 echo "### bootstrap"; run bootstrap
@@ -82,6 +89,9 @@ if [ -n "$extra" ]; then
     [ -f "/home/tester/$d/agentic-sdd-router/SKILL.md" ] || { echo "SKILLS-MISSING: $d"; exit 1; }
   done
   echo "AGENTIC-SDD-SKILLS-OK"
+  if grep -qx "# pnpm" /home/tester/.bashrc; then echo "PNPM-BLOCK-NOT-REMOVED"; exit 1; fi
+  su - tester -c "bash -ic \"case \\\$(command -v pnpm) in */.nvm/*) pnpm bin -g ;; *) exit 1 ;; esac\"" 2>/dev/null | grep -qx /home/tester/.local/share/pnpm/bin \
+    && echo "PNPM-FROM-DEVSTACK" || { echo "PNPM-NOT-FROM-DEVSTACK"; exit 1; }
 fi
 '
 
