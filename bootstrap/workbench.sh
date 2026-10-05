@@ -2,7 +2,7 @@
 # platform-workbench lifecycle engine.
 #
 #   workbench.sh <bootstrap|update|verify> --profile <macos|rhel|ubuntu|proxmox>
-#                [--dry-run] [--extras go,node,cka] [--only MOD,...]
+#                [--dry-run] [--extras go,node,cka,devstack] [--only MOD,...]
 #                [--expect-host H] [--yes] [--force-profile]
 #
 # bootstrap  install and wire everything the profile lists (idempotent; also the repair path)
@@ -54,10 +54,14 @@ extra_on() { case ",$WB_EXTRAS," in *",$1,"*) return 0 ;; esac; return 1; }
 # Profile defaults, then the profile itself.
 MODULES=(); PKGS_BASE=(); PKGS_NET=(); PKGS_ADMIN=(); MAC_APPS=()
 CONTAINER_ENGINE=none; K8S_MINOR=""; GO_VERSION=""
+PKGS_DEV=(); NVM_VERSION=""; JAVA_MAJOR=""
 # shellcheck source=/dev/null
 . "$WB_ROOT/bootstrap/profiles/$WB_PROFILE.sh"
 if extra_on k8s-cluster; then
   die "k8s-cluster provisioning belongs to the homelab project; use this profile for client/node tools only"
+fi
+if extra_on devstack && [ "$WB_PROFILE" != ubuntu ]; then
+  die "the devstack extra is only available on the ubuntu profile"
 fi
 
 # --only: keep the listed modules, in profile order. A name the profile lacks is an error,
