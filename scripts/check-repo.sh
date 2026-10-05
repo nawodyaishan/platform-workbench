@@ -38,6 +38,23 @@ for h in $reg_hosts; do
   [ -r "bootstrap/profiles/$p.sh" ] || { echo "host $h uses unknown profile $p" >&2; rc=1; }
 done
 
+# The command reference (scripts/help.sh) must list exactly the public tasks and make targets.
+help_cmds=$(sed -n "/^COMMANDS='$/,/^'$/p" scripts/help.sh | awk -F';' 'NF>1 {print $2}' | sort)
+task_cmds=$(awk '/^tasks:/ {t=1; next} t && /^  [a-z][a-z0-9:-]*:$/ {sub(/:$/, ""); sub(/^  /, ""); print}' Taskfile.yml \
+  | grep -vxE 'default|help' | sort)
+make_cmds=$(awk -F':' '/^[a-z][a-z0-9 -]*:/ {n=split($1, t, " "); for (i=1; i<=n; i++) print t[i]}' Makefile \
+  | grep -vxE 'help|preflight' | sort)
+if [ "$help_cmds" != "$task_cmds" ]; then
+  echo "scripts/help.sh and Taskfile.yml list different commands:" >&2
+  diff <(printf '%s\n' "$help_cmds") <(printf '%s\n' "$task_cmds") >&2 || true
+  rc=1
+fi
+if [ "$(printf '%s\n' "$help_cmds" | tr ':' '-' | sort)" != "$make_cmds" ]; then
+  echo "scripts/help.sh and the Makefile list different commands:" >&2
+  diff <(printf '%s\n' "$help_cmds" | tr ':' '-' | sort) <(printf '%s\n' "$make_cmds") >&2 || true
+  rc=1
+fi
+
 python3 - "$ROOT" <<'PY' || rc=1
 from pathlib import Path
 from urllib.parse import unquote
@@ -60,5 +77,5 @@ if failures:
     print('Broken relative Markdown links:\n' + '\n'.join(failures), file=sys.stderr)
     sys.exit(1)
 PY
-[ "$rc" -eq 0 ] && echo 'Repository structure, host registry and Markdown links: ok'
+[ "$rc" -eq 0 ] && echo 'Repository structure, host registry, command reference and Markdown links: ok'
 exit "$rc"
