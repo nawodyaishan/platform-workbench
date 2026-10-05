@@ -11,7 +11,7 @@ In scope, all on Ubuntu LTS (24.04 and later), amd64 and arm64:
 | Area | Tool | Source (from vendor docs, researched 2026-10-04) |
 |---|---|---|
 | Node | nvm, plus the latest LTS Node as `default` | nvm `install.sh` at a pinned tag (`v0.40.8` today), run with `PROFILE=/dev/null` so it never edits rc files; `nvm install 'lts/*'` |
-| JS package managers | yarn, pnpm | Node 25+ no longer bundles Corepack, and Node 26 becomes LTS on 2026-10-28. `npm install -g corepack pnpm`, then `corepack enable yarn`, following the Yarn and pnpm install docs |
+| JS package managers | yarn, pnpm | Node 25+ no longer bundles Corepack, and Node 26 becomes LTS on 2026-10-28. `npm install -g corepack`, whose package ships the `yarn` and `pnpm` shims (installing the `pnpm` package too clashes on the `pnpm`/`pnpx` bins); the default versions are cached once |
 | Go | latest stable Go | `go.dev/dl/?mode=json` resolves the newest stable version (`go1.27.1` today); the tarball is checksum-verified into `/usr/local/go` |
 | Rust | rustup, stable toolchain, `rustfmt` + `clippy` | `sh.rustup.rs` with `-y --no-modify-path --profile default` |
 | Java | Eclipse Temurin JDK (LTS 25) + Maven | Adoptium apt repo, key fingerprint-checked; `temurin-25-jdk`, apt `maven` |
@@ -24,8 +24,8 @@ In scope, all on Ubuntu LTS (24.04 and later), amd64 and arm64:
 | Build deps | build-essential, pkg-config, libssl-dev, zlib1g-dev, libffi-dev, python3-venv, python3-pip, pipx, procps, file, zip, xz-utils | Ubuntu apt |
 
 - A new `devstack` module (`devstack_bootstrap`, `_update`, `_verify`) added to the `ubuntu` profile but gated behind a new `devstack` extra, the same mechanism as the existing `go`, `node` and `cka` extras.
-- A new `--only <module,...>` engine flag that limits a run to the listed profile modules. The separate command runs exactly `base,containers,k8s,devstack` with `--extras devstack`.
-- New commands: `task devstack`, `task devstack:update` and `task devstack:verify` (`-- --dry-run` passes through), each with a matching Makefile target (`devstack`, `devstack-update`, `devstack-verify`). From the Mac, `task bootstrap HOST=dev-01 -- --extras devstack --only base,containers,k8s,devstack` drives the same run remotely through the existing `remote.sh`.
+- A new `--only <module,...>` engine flag that limits a run to the listed profile modules. The separate command runs exactly `base,shell,containers,k8s,devstack` with `--extras devstack`; `shell` wires `~/.bashrc` to the canonical `config/shell/bashrc` so the tools are on `PATH` on a fresh host.
+- New commands: `task devstack`, `task devstack:update` and `task devstack:verify` (`-- --dry-run` passes through), each with a matching Makefile target (`devstack`, `devstack-update`, `devstack-verify`). From the Mac, `task bootstrap HOST=dev-01 -- --extras devstack --only base,shell,containers,k8s,devstack` drives the same run remotely through the existing `remote.sh`.
 - `config/shell/bashrc` gains `~/.cargo/bin` on `PATH` (only if present) and `brew shellenv` (only if `/home/linuxbrew/.linuxbrew` exists). nvm is already sourced there.
 - Docs: `docs/hosts.md` (Extras + a devstack section), `README.md` (profiles row, commands table, layout list).
 
@@ -78,4 +78,6 @@ None blocking. Recorded assumptions, each overridable at approval:
 
 ## Approval
 
-Status: **draft/pending**. Covers this revision of `spec.md`, `plan.md` and `tasks.md` (drafted 2026-10-04). No approver recorded yet.
+Status: **approved**. Approver: nawodyaishan (chat, 2026-10-04, "approved" in reply to the draft summary). Scope covered: `spec.md`, `plan.md` and `tasks.md` as committed in `a0b4818`, including the four recorded assumptions. Authorization covers implementing Batch 1. A real run on `dev-01` or any other host is not authorized.
+
+Amendment: pnpm through the corepack shims (no separate `pnpm` package) and the added `shell` module were accepted with Batch 1 (nawodyaishan, chat, 2026-10-05, "proceed" after the Batch 1 review summary). The scope table and command line above reflect them.

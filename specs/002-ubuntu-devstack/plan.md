@@ -4,12 +4,12 @@ Spec revision used: `spec.md` as drafted 2026-10-04.
 
 ## Approach
 
-Add one module, `bootstrap/modules/devstack.sh`, to the `ubuntu` profile behind a `devstack` extra. Reuse the existing modules for the parts the profile already owns: `containers` for Docker CE and `k8s` for kubectl, crictl, helm and k9s. Add a general `--only` filter to the engine so the separate command runs just `base,containers,k8s,devstack`. Task and Make get thin entries that call the engine. There is no new install path that the engine and `remote.sh` don't already understand.
+Add one module, `bootstrap/modules/devstack.sh`, to the `ubuntu` profile behind a `devstack` extra. Reuse the existing modules for the parts the profile already owns: `containers` for Docker CE and `k8s` for kubectl, crictl, helm and k9s. Add a general `--only` filter to the engine so the separate command runs just `base,shell,containers,k8s,devstack`. Task and Make get thin entries that call the engine. There is no new install path that the engine and `remote.sh` don't already understand.
 
 ### Command surface
 
 ```text
-task devstack            [-- --dry-run]   -> workbench.sh bootstrap --profile ubuntu --extras devstack --only base,containers,k8s,devstack
+task devstack            [-- --dry-run]   -> workbench.sh bootstrap --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack
 task devstack:update     [-- --dry-run]   -> same with update
 task devstack:verify                      -> same with verify
 make devstack | devstack-update | devstack-verify  [ARGS=--dry-run]
@@ -26,13 +26,13 @@ All three force `PROFILE=ubuntu`. The engine's existing `check_profile_host` and
 Each tool gets one small `_ds_<tool>` function for install and upgrade and one `_ds_<tool>_verify` function. `devstack_bootstrap`, `_update` and `_verify` call them in a fixed order:
 
 1. **apt packages**: build deps and CLIs via `pm_install` / `pm_upgrade` / `pm_check`. Ubuntu names `fd-find` and `bat` as `fdfind`/`batcat`, and verify checks those names. No symlinks are created; aliases are left to the user.
-2. **Vendor apt repos**: HashiCorp, Adoptium and GitHub CLI. A shared `_ds_apt_repo <name> <key-url> <fingerprint> <deb-line>` helper follows `_helm_repo_ubuntu`: download the key, compare the fingerprint, dearmor it into `/usr/share/keyrings/<name>.gpg`, write `/etc/apt/sources.list.d/<name>.list`, and touch nothing when both files already exist. Then `pm_install terraform temurin-${JAVA_MAJOR}-jdk gh`. Pinned fingerprints, each confirmed against the vendor page at implementation time:
-   - HashiCorp `798AEC654E5C15428C8E42EEAA16FCBCA621E701`
+2. **Vendor apt repos**: HashiCorp, Adoptium and GitHub CLI. A shared `apt_repo_keyed <name> <key-url> <fingerprints> <deb-line>` helper in `bootstrap/lib/install.sh` follows `_helm_repo_ubuntu`: download the key, require every primary key in it to be one of the pinned fingerprints, dearmor it (or copy a binary keyring) into `/usr/share/keyrings/<name>.gpg`, write `/etc/apt/sources.list.d/<name>.list`, and touch nothing when both files already exist. Then `pm_install terraform temurin-${JAVA_MAJOR}-jdk gh`. Pinned fingerprints, each confirmed against the vendor page at implementation time:
+   - HashiCorp `D55C0D1AC78A8D8126CB631CFC9CA96ACA026560` (rotated on 2026-09-10 per HCSEC-2026-33; the earlier `798AEC65…` key is retired)
    - Adoptium `3B04D753C9050D9A5D343F39843C48A565F8F04B`
-   - GitHub CLI `2C6106201985B60E6C7AC87323F3D4EA75716059`
+   - GitHub CLI `2C6106201985B60E6C7AC87323F3D4EA75716059` and `7F38BBB59D064DBCB3D84D725612B36462313325` (the published keyring holds both; the first has expired)
 3. **Go (latest)**: resolve the newest stable version from `go.dev/dl/?mode=json`. If `/usr/local/go` already reports that version, it's `ok`. Otherwise install with the same checksum-verified tarball code as `lang`. `_go_install` moves out of `lang.sh` into a new `bootstrap/lib/install.sh` as `go_install_tarball <version>`, so both modules share one implementation. `lang.sh` keeps its pinned `GO_VERSION` behavior.
-4. **nvm + Node LTS**: if `~/.nvm/nvm.sh` is missing, run `PROFILE=/dev/null bash` on `raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh`. On bootstrap, `nvm install 'lts/*'` only when no LTS is installed. On update, `nvm install --reinstall-packages-from=current 'lts/*'` when `nvm version-remote 'lts/*'` differs from the installed default. Then `nvm alias default 'lts/*'`. nvm functions run inside `bash -c '. "$NVM_DIR/nvm.sh"; …'` because nvm needs to be sourced and its scripts aren't `set -u` clean.
-5. **corepack, yarn, pnpm**: `npm install -g corepack pnpm` (skipped when present on bootstrap, run on update), then `corepack enable yarn`. pnpm comes from npm rather than `get.pnpm.io`, so it lives in the nvm Node prefix and moves with `--reinstall-packages-from`.
+4. **nvm + Node LTS**: if `~/.nvm/nvm.sh` is missing, run `PROFILE=/dev/null bash` on `raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh`. On bootstrap, `nvm install 'lts/*'` only when no LTS is installed. On update, `nvm install --reinstall-packages-from=<old default> <latest>` when `nvm version-remote --lts` differs from the installed default. Then `nvm alias default <latest>` (an exact version, so `nvm version default` is a stable idempotency check). nvm functions run inside `bash -c '. "$NVM_DIR/nvm.sh"; …'` because nvm needs to be sourced and its scripts aren't `set -u` clean.
+5. **corepack, yarn, pnpm**: `npm install -g corepack` (skipped when the shims exist on bootstrap, run on update). The corepack npm package ships the `yarn` and `pnpm` shims itself, so no `corepack enable` is needed. The separate `pnpm` npm package is not installed: its `pnpm`/`pnpx` bins clash with corepack's. Bootstrap then fetches the default yarn and pnpm once from an empty directory, so verify can run them with `COREPACK_ENABLE_NETWORK=0`. Everything lives in the nvm Node prefix and moves with `--reinstall-packages-from`.
 6. **Rust**: if `~/.cargo/bin/rustup` is missing, run `sh.rustup.rs` with `-y --no-modify-path --profile default --default-toolchain stable`. On update, `rustup update`.
 7. **kind**: GitHub `releases/latest`, download `kind-linux-$ARCH` plus its `.sha256sum`, verify, and `install -m 0755` to `/usr/local/bin/kind`. It's `ok` when the installed `kind version` matches the latest tag.
 8. **AWS CLI v2**: if `aws` is missing (or on update), run `awscli.amazonaws.com/v2/install.sh | bash` (per-user `~/.local/share/aws-cli` plus a symlink in `~/.local/bin`, which bashrc already puts on `PATH`).
@@ -62,14 +62,14 @@ Bootstrap order puts apt (1–2) before everything that needs `curl`, `gpg`, com
 1. **Extra plus `--only` rather than a new profile.** A new `ubuntu-dev` profile would need host detection, `hosts.conf` and test changes, and would duplicate the module list. An extra keeps one Ubuntu profile, and `--only` makes "separate command" literal: the dev stack runs without re-running shell, git, ssh, tailscale or cka.
 2. **Reuse `containers` and `k8s`** instead of re-implementing Docker and kubectl, which keeps one canonical implementation per tool.
 3. **Temurin over Ubuntu `openjdk-*`**: it covers every LTS on every Ubuntu LTS and has a single vendor repo with a fingerprint check. SDKMAN was rejected because it is a second version manager that edits rc files.
-4. **pnpm and corepack from npm in the nvm prefix**, not the standalone `get.pnpm.io` script, so the JS toolchain has one owner (nvm) and upgrades together.
+4. **corepack from npm in the nvm prefix, providing both pnpm and yarn**, not the standalone `get.pnpm.io` script, so the JS toolchain has one owner (nvm) and upgrades together.
 5. **Latest, not pinned, for Go, Node LTS, Rust, kind and the AWS CLI** because the user asked for latest. Installer tooling is pinned where the vendor offers tags (nvm). Homebrew, rustup and AWS installers have no stable tag and are taken from `HEAD`/`latest` over HTTPS, which is the stated trust assumption.
 6. **`update` stays scoped**: named apt packages through `pm_upgrade`, plus each tool's own updater. Never `apt upgrade` or `brew upgrade`.
 
 ## Risks
 
 - **Remote-script trust (nvm, rustup, Homebrew, AWS).** These execute vendor code fetched at run time. Mitigations: HTTPS only (`--proto '=https' --tlsv1.2` where the vendor documents it), the nvm tag is pinned, the scripts are never run as root, and `--dry-run` shows each one before it runs. The AWS script verifies its own zip.
-- **Corepack is experimental and unbundled.** It's used only for yarn. If it breaks, pnpm is unaffected, and verify flags a missing `yarn` as `bad`.
+- **Corepack is experimental and unbundled.** It provides both yarn and pnpm. If it breaks, verify flags missing `yarn`/`pnpm` as `bad`; the fallback is `npm i -g pnpm` without corepack.
 - **The Node LTS switch on 2026-10-28.** An `update` after that date moves `default` to 26. That's intended and documented.
 - **Homebrew prefix on arm64** is lower-tier support, so a failure there is `warn`.
 - **The container test is heavy** (Rust, Homebrew and Node downloads, roughly 10 minutes). That's why `ubuntu-devstack` is opt-in and not part of the default `test:profiles` list. Its `limited 900` timeout may need raising to 1800.
