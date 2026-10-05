@@ -16,7 +16,7 @@ VARS = $(if $(HOST),HOST=$(HOST)) $(if $(PROFILE),PROFILE=$(PROFILE)) $(if $(KEY
 ARGS_SUFFIX = $(if $(ARGS),-- $(ARGS))
 
 .DEFAULT_GOAL := help
-.PHONY: help preflight install-task install-aliases install-ubuntu install-rhel install-proxmox bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
+.PHONY: help preflight install-task install-aliases install-ubuntu install-rhel install-proxmox devstack devstack-update devstack-verify bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
         ssh-copy-id gh-key aliases kk lint secrets repo check test-remote test-profiles hooks
 
 help: ## Show this help (works without Task installed)
@@ -88,3 +88,9 @@ install-rhel: install-task ## Task + rhel profile on this host
 	@$(TASK) install:rhel $(ARGS_SUFFIX)
 install-proxmox: install-task ## Task + minimal proxmox profile on this host (run as root)
 	@$(TASK) install:proxmox $(ARGS_SUFFIX)
+devstack: preflight ## Full-stack dev toolchain on this Ubuntu host (ARGS=--dry-run first)
+	@$(TASK) devstack $(ARGS_SUFFIX)
+devstack-update: preflight ## Upgrade the dev toolchain on this Ubuntu host
+	@$(TASK) devstack:update $(ARGS_SUFFIX)
+devstack-verify: preflight ## Read-only check of the dev toolchain
+	@$(TASK) devstack:verify $(ARGS_SUFFIX)

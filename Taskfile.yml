@@ -25,9 +25,10 @@ tasks:
                      task install:aliases   (aliases only, onto this machine; no bootstrap)
           install    task install:task [-- --distro ubuntu|rhel|proxmox --method binary --dry-run]
                      task install:ubuntu | install:rhel | install:proxmox [-- --dry-run]
+          devstack   task devstack | devstack:update | devstack:verify [-- --dry-run]   (Ubuntu)
           labs       task kk
           repo       task lint | secrets | repo | check | test:remote | test:profiles | hooks
-        flags: --dry-run  --yes  --extras go,node,cka
+        flags: --dry-run  --yes  --extras go,node,cka,devstack  --only MOD,...
         hosts: {{.HOSTS}}(bootstrap/hosts.conf)
         EOF
 
@@ -147,6 +148,21 @@ tasks:
         case " {{.CLI_ARGS}} " in *" --dry-run "*) dry=--dry-run ;; *) dry= ;; esac
         "{{.SH}}/install-task.sh" --distro proxmox $dry
         exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile proxmox {{.CLI_ARGS}}
+  # Full-stack toolchain on this Ubuntu host: only base, shell (rc wiring), containers, k8s and devstack run.
+  devstack:
+    desc: Install the full-stack dev toolchain on this Ubuntu host (-- --dry-run first)
+    interactive: true
+    cmds:
+      - '"{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
+  devstack:update:
+    desc: Upgrade the dev toolchain (Node LTS, Go, Rust, AWS CLI, kind, its apt packages)
+    interactive: true
+    cmds:
+      - '"{{.ROOT}}/bootstrap/workbench.sh" update --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
+  devstack:verify:
+    desc: Read-only check of the dev toolchain
+    cmds:
+      - '"{{.ROOT}}/bootstrap/workbench.sh" verify --profile ubuntu --extras devstack --only base,shell,containers,k8s,devstack {{.CLI_ARGS}}'
   kk:
     desc: Copy a KodeKloud shell snippet to the Mac clipboard (TOPIC=cka|k8s|terraform|aws|ansible|linux, default cka)
     cmds:
