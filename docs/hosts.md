@@ -56,7 +56,7 @@ The Make equivalents are `make devstack`, `make devstack-update` and `make devst
 | Area | Tool | Source and check |
 |---|---|---|
 | Node | nvm (pinned tag) + the latest LTS Node as `default` | nvm `install.sh` with `PROFILE=/dev/null` (no rc edits) |
-| JS package managers | yarn, pnpm | the `corepack` npm package's shims (Node 25+ no longer bundles Corepack); default versions cached once |
+| JS package managers | yarn, pnpm | the `corepack` npm package's shims (Node 25+ no longer bundles Corepack); default versions cached once; `pnpm add -g` installs into `~/.local/share/pnpm/bin` |
 | Go | latest stable | `go.dev` tarball, SHA-256 checked, `/usr/local/go` |
 | Rust | rustup + stable (`rustfmt`, `clippy`) | `sh.rustup.rs` with `--no-modify-path` |
 | Java | Eclipse Temurin JDK (`JAVA_MAJOR`, 25) + Maven | Adoptium apt repo, key fingerprint pinned |
@@ -74,7 +74,8 @@ Notes:
 - **Agent skills.** Only the agentic-sdd skills are installed; other skills on the Mac are not copied. Bump the tag and commit in `bootstrap/profiles/ubuntu.sh` to take a new release. Verify warns if a skill was edited on the host; the next `task devstack` restores it after a backup (`agentic-sdd backups`, `agentic-sdd restore`).
 - **Key rotation.** A pinned apt key that no longer matches fails closed with `FAIL`. Re-check the vendor's published fingerprint before updating the pin in `devstack.sh`. HashiCorp last rotated on 2026-09-10.
 - **Node LTS moves.** Node 26 becomes LTS on 2026-10-28. The next `task devstack:update` after that installs it, reinstalls global packages (corepack) from the old version and repoints `default`. Older versions stay installed.
-- **Shell wiring.** `config/shell/bashrc` loads nvm and `brew shellenv` and puts `~/.cargo/bin`, `/usr/local/go/bin` and `~/.local/bin` on `PATH`. Open a new shell after the first run.
+- **Shell wiring.** `config/shell/bashrc` loads nvm and `brew shellenv`, sets `PNPM_HOME`, and puts `~/.cargo/bin`, `/usr/local/go/bin`, `~/.local/bin` and `$PNPM_HOME/bin` on `PATH`. Open a new shell (or `source ~/.bashrc`) after the first run: a terminal opened before it has no `node`, `pnpm` or `yarn`. Only interactive shells load this wiring, so `ssh host cmd` and other non-interactive shells don't see the nvm tools.
+- **One pnpm.** devstack's pnpm is the corepack shim in the nvm Node. Don't also run the standalone installer (`get.pnpm.io`): it appends a `# pnpm` block to `~/.bashrc` that puts its own pnpm first. `task devstack` removes that block after a backup, and verify warns while the standalone binaries are still in `~/.local/share/pnpm/bin` (the store in that directory is shared, so it stays).
 - **arm64.** Everything has arm64 builds. Homebrew on Linux arm64 is a lower support tier, so a failed install there is `WARN`, not `FAIL`.
 - **From the Mac.** `task bootstrap HOST=dev-01 -- --extras devstack --only base,shell,containers,k8s,devstack` runs the same thing remotely (the payload is the tracked files only, so commit first). Remote `verify` takes no flags, so check the stack on the host with `task devstack:verify`.
 - **Out of scope.** Credentials (`aws configure`, `gh auth login`, `docker login`), editors, databases as services, and creating Kubernetes clusters (that belongs to the homelab repo).
