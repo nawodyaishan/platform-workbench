@@ -130,7 +130,7 @@ Linux profiles take opt-in extras with `--extras go,node,cka` (and `devstack` on
 
 ## Commands
 
-Everything goes through [Task](https://taskfile.dev). Run `task` on its own for the summary.
+Everything goes through [Task](https://taskfile.dev). Run `task` on its own for the grouped command reference, or `task help -- <command>` for one command's usage. `make help` prints the same reference with make target names; both come from [`scripts/help.sh`](scripts/help.sh).
 
 | Command | What it does |
 |---|---|
@@ -151,7 +151,7 @@ Everything goes through [Task](https://taskfile.dev). Run `task` on its own for 
 
 Lifecycle flags go after `--`: `--dry-run`, `--yes`, `--extras go,node,cka,devstack`, `--only MOD,...`.
 
-Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with underscores for colons: `make check`, `make test-remote`, `make bootstrap HOST=dev-01 ARGS="--dry-run"`. Run `make` on its own for the summary.
+Prefer `make`? The [`Makefile`](Makefile) is a thin wrapper that forwards to Task (it still needs Task installed), with hyphens for colons: `make check`, `make test-remote`, `make bootstrap HOST=dev-01 ARGS="--dry-run"`. Run `make` on its own for the same command reference.
 
 ## Safety model
 
@@ -188,7 +188,7 @@ bootstrap/
   profiles/           macos (+ Brewfile), rhel, ubuntu, proxmox
 config/               canonical shell, tmux, vim, nvim, herdr, git, ssh and ghostty configs
 kodekloud/            paste-in shell snippets for disposable lab nodes (cka, k8s, terraform, aws, ansible, linux)
-scripts/              remote transport, secret scan, repo checks, tests, git hook
+scripts/              command reference, remote transport, secret scan, repo checks, tests, git hook
 docs/                 hosts, new-machine, ssh, config, kodekloud, cheatsheets, ssh-tutorial/
 .claude/skills/       agentic spec-driven development skills for AI coding agents
 ```
