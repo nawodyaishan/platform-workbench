@@ -8,6 +8,9 @@ onboarding = false
 
 [theme]
 name = "catppuccin"
+auto_switch = true
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"
 
 [keys]
 # Same prefix as tmux. Defaults already match tmux for h/j/k/l pane focus, c new tab,
@@ -19,6 +22,41 @@ prefix = "ctrl+b"
 split_vertical = ["prefix+v", "prefix+|"]
 # Detach stays at Herdr's default prefix+q (tmux uses prefix+d, which Herdr does not bind).
 
+# --- Plugin keybindings -------------------------------------------------------
+# Review the agent's diff; works with OpenCode, Claude Code, Codex and Pi.
+[[keys.command]]
+key = "prefix+ctrl+r"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle"
+description = "review agent diff"
+
+# Neovim sidebar and picker (requires the nvim half in lua/user.lua).
+[[keys.command]]
+key = "prefix+ctrl+e"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.toggle"
+description = "nvim sidebar"
+
+[[keys.command]]
+key = "prefix+f"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.pick-file"
+description = "open file from agent output"
+
+# Git status/diff, stage/commit, edit at the changed line.
+[[keys.command]]
+key = "prefix+ctrl+g"
+type = "plugin_action"
+command = "chmarax.gitview.toggle-tab"
+description = "git view tab"
+
+# Uncomment after installing qintmb/herdr-theme-picker.
+# [[keys.command]]
+# key = "prefix+t"
+# type = "plugin_action"
+# command = "herdr-theme-picker.open"
+# description = "theme picker"
+
 [ui.toast]
 # Visual in-app notification when a background agent finishes or needs attention.
 delivery = "herdr"
@@ -26,3 +64,38 @@ delivery = "herdr"
 [ui]
 # Agent states shown as distinct glyphs, not only colours.
 status_indicators = "symbols"
+# Fixed sidebar width: stops the layout shifting when workspace names change.
+sidebar_width = 40
+sidebar_min_width = 40
+sidebar_max_width = 40
+sidebar_collapsed_mode = "compact"
+# Attention queue: blocked first, then done, then working.
+agent_panel_sort = "priority"
+show_agent_labels_on_pane_borders = true
+pane_borders = "auto"
+pane_gaps = true
+pane_outer_borders = true
+tab_bar_position = "top"
+tab_bar_right_separator = " · "
+tab_bar_right = [
+  { type = "zoom" },
+  { type = "hostname" },
+  { type = "datetime", format = "%H:%M" },
+]
+window_title = "{workspace} › {tab}"
+# Enable after installing kryptamine/herdr-auto-title:
+# prompt_new_tab_name = false
+copy_on_select = false
+
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  ["state_icon", "workspace", "tab"],
+  ["agent", "terminal_title_stripped"],
+]
+
+[ui.sidebar.spaces]
+row_gap = 0
+rows = [
+  ["state_icon", "workspace", "branch", "git_status"],
+]
