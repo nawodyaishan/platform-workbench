@@ -8,7 +8,7 @@ onboarding = false
 
 [theme]
 name = "catppuccin"
-auto_switch = true
+auto_switch = false
 dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
@@ -86,7 +86,8 @@ tab_bar_right = [
 window_title = "{workspace} › {tab}"
 # Enable after installing kryptamine/herdr-auto-title:
 # prompt_new_tab_name = false
-copy_on_select = false
+# Mouse drag or double-click copies the selection immediately (Herdr's default).
+copy_on_select = true
 
 [ui.sidebar.agents]
 row_gap = 0
