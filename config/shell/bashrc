@@ -27,7 +27,7 @@ export KUBE_EDITOR=vim
 export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
 
 # PATH (only add what exists, only once)
-for _d in "$PNPM_HOME/bin" "$HOME/.local/bin" /usr/local/go/bin "$HOME/go/bin" "$HOME/.cargo/bin"; do
+for _d in "$PNPM_HOME/bin" "$HOME/.local/bin" "$HOME/.local/opt/nvim/bin" /usr/local/go/bin "$HOME/go/bin" "$HOME/.cargo/bin"; do
   [ -d "$_d" ] && case ":$PATH:" in *":$_d:"*) ;; *) PATH="$_d:$PATH" ;; esac
 done
 unset _d

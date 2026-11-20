@@ -8,6 +8,7 @@ vim.opt.mouse = "a"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.signcolumn = "yes"
+vim.opt.background = "dark"
 vim.opt.updatetime = 250
 vim.opt.timeoutlen = 300
 vim.opt.undofile = true
@@ -28,8 +29,27 @@ vim.opt.shiftwidth = 2
 vim.opt.softtabstop = 2
 vim.opt.autoindent = true
 
--- Built into Neovim core since 0.10; no colorscheme plugin needed for a minimal setup.
-vim.cmd.colorscheme("retrobox")
+vim.api.nvim_create_autocmd("FileType", {
+  desc = "YAML: two-space indentation regardless of other filetype defaults",
+  group = vim.api.nvim_create_augroup("workbench-yaml-indent", { clear = true }),
+  pattern = "yaml",
+  callback = function()
+    vim.bo.expandtab = true
+    vim.bo.tabstop = 2
+    vim.bo.shiftwidth = 2
+    vim.bo.softtabstop = 2
+  end,
+})
+
+-- Search the repository with ripgrep when it is installed; quickfix reads its format.
+if vim.fn.executable("rg") == 1 then
+  vim.opt.grepprg = "rg --vimgrep --smart-case"
+  vim.opt.grepformat = "%f:%l:%c:%m"
+end
+
+-- Bundled with Neovim; no plugin or network fetch needed. Its dark palette suits
+-- Ghostty -> SSH -> tmux without depending on terminal colour support.
+vim.cmd.colorscheme("habamax")
 
 vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "Highlight when yanking (copying) text",

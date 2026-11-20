@@ -43,7 +43,19 @@ vim.lsp.config("yamlls", {
   filetypes = { "yaml" },
   root_markers = { ".git" },
   settings = {
-    yaml = { keyOrdering = false },
+    yaml = {
+      keyOrdering = false,
+      validate = true,
+      -- Plain manifests under k8s/ get Kubernetes schema completion and diagnostics.
+      schemas = {
+        kubernetes = {
+          "**/k8s/*.yaml",
+          "**/k8s/**/*.yaml",
+          "**/k8s/*.yml",
+          "**/k8s/**/*.yml",
+        },
+      },
+    },
   },
 })
 
@@ -76,6 +88,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("grt", fzf("lsp_typedefs"), "type definition")
     map("gO", fzf("lsp_document_symbols"), "document symbols")
     map("gW", fzf("lsp_live_workspace_symbols"), "workspace symbols")
+    -- Field-guide keys. Formatting stays on <leader>cf so the <leader>f* pickers
+    -- do not wait for a second key.
+    map("<leader>r", vim.lsp.buf.rename, "rename symbol")
+    map("<leader>u", vim.lsp.buf.references, "find usages")
 
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
     if client and client:supports_method("textDocument/documentHighlight", ev.buf) then
