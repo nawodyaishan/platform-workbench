@@ -64,10 +64,11 @@ delivery = "herdr"
 [ui]
 # Agent states shown as distinct glyphs, not only colours.
 status_indicators = "symbols"
-# Fixed sidebar width: stops the layout shifting when workspace names change.
+# Sidebar width in columns. Starts at 40; drag its edge with the mouse to resize.
+# The layout no longer shifts with workspace names because the start width is fixed.
 sidebar_width = 40
-sidebar_min_width = 40
-sidebar_max_width = 40
+sidebar_min_width = 24
+sidebar_max_width = 64
 sidebar_collapsed_mode = "compact"
 # Attention queue: blocked first, then done, then working.
 agent_panel_sort = "priority"

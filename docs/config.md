@@ -67,7 +67,7 @@ Reload: `Ctrl-b R`, or `tmux source-file ~/.tmux.conf`. Existing sessions keep t
 
 Herdr is a separate multiplexer, not a tmux layer. Launch it on its own with `herdr`; launch tmux with `tm`. Do not run one inside the other (`allow_nested = false`). Install with `brew install herdr` (or `curl -fsSL https://herdr.dev/install.sh | sh`); the workbench only links the config. Validate with `herdr config check`; reload a running server with `herdr server reload-config` or `Ctrl-b Shift-R`.
 
-The config sets only the prefix, the `catppuccin` theme, `|` as an extra side-by-side split, in-app toasts for background agents and symbol status indicators; everything else is Herdr's default. Option+Left/Right word jumps inside Herdr panes (for example the Claude Code prompt) rely on the Ghostty config unbinding Ghostty's default `esc:b`/`esc:f` for those keys, with a matching zsh `bindkey` in `config/shell/zshrc`. Agent visibility is the sidebar (`Ctrl-b b` toggles it), workspaces are `Ctrl-b w` / `Ctrl-b g`.
+The config sets only the prefix, the `catppuccin` theme, `|` as an extra side-by-side split, in-app toasts for background agents and symbol status indicators; everything else is Herdr's default. Option+Left/Right word jumps inside Herdr panes (for example the Claude Code prompt) rely on the Ghostty config unbinding Ghostty's default `esc:b`/`esc:f` for those keys, with a matching zsh `bindkey` in `config/shell/zshrc`. Agent visibility is the sidebar (`Ctrl-b b` toggles it), workspaces are `Ctrl-b w` / `Ctrl-b g`. The sidebar starts at 40 columns and can be resized by dragging its edge with the mouse (24–64 columns).
 
 | Action | tmux | Herdr |
 |---|---|---|
