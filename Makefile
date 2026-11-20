@@ -18,7 +18,7 @@ VARS = $(if $(HOST),HOST=$(HOST)) $(if $(PROFILE),PROFILE=$(PROFILE)) $(if $(KEY
 ARGS_SUFFIX = $(if $(ARGS),-- $(ARGS))
 
 .DEFAULT_GOAL := help
-.PHONY: help preflight install-task install-aliases install-ubuntu install-rhel install-proxmox devstack devstack-update devstack-verify bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
+.PHONY: help preflight install-task install-aliases install-ubuntu install-rhel install-proxmox install-nvim devstack devstack-update devstack-verify bootstrap update verify verify-all main ssh rhel ubuntu proxmox hosts \
         ssh-copy-id gh-key aliases kk lint secrets repo check test-remote test-profiles hooks
 
 # make help [CMD=target]: works before Task is installed.
@@ -82,6 +82,9 @@ install-rhel: install-task
 	@$(TASK) install:rhel $(ARGS_SUFFIX)
 install-proxmox: install-task
 	@$(TASK) install:proxmox $(ARGS_SUFFIX)
+# Runs the script directly, like install-task: Neovim needs no Task. ARGS="--dry-run --no-lsp".
+install-nvim:
+	@./scripts/install-nvim.sh $(ARGS)
 devstack: preflight
 	@$(TASK) devstack $(ARGS_SUFFIX)
 devstack-update: preflight

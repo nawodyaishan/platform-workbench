@@ -35,6 +35,7 @@ Install;install:task;[-- --distro NAME --method repo|binary --dry-run];Install T
 Install;install:ubuntu;[-- --dry-run];Install Task and the ubuntu profile on this host
 Install;install:rhel;[-- --dry-run];Install Task and the rhel profile on this host
 Install;install:proxmox;[-- --dry-run];Install Task and the minimal proxmox profile, as root
+Install;install:nvim;[-- --dry-run --no-lsp];Install Neovim 0.12, tree-sitter and link this nvim config on this Linux host
 Shell;aliases;;Copy the paste-in aliases installer to the clipboard
 Shell;install:aliases;;Install only the aliases and functions on this machine
 Labs;kk;[TOPIC=cka|k8s|terraform|aws|ansible|linux];Copy a KodeKloud shell snippet to the clipboard

@@ -131,6 +131,9 @@ tasks:
         case " {{.CLI_ARGS}} " in *" --dry-run "*) dry=--dry-run ;; *) dry= ;; esac
         "{{.SH}}/install-task.sh" --distro proxmox $dry
         exec "{{.ROOT}}/bootstrap/workbench.sh" bootstrap --profile proxmox {{.CLI_ARGS}}
+  install:nvim:
+    desc: Install Neovim 0.12, tree-sitter and link this nvim config on this Linux host
+    cmds: ['"{{.SH}}/install-nvim.sh" {{.CLI_ARGS}}']
   # Full-stack toolchain on this Ubuntu host: only base, shell (rc wiring), containers, k8s and devstack run.
   devstack:
     desc: Install the full-stack toolchain on this Ubuntu host
